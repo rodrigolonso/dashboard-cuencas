@@ -480,8 +480,7 @@ function actualizarBarras(datos) {
 
     if (graficaAreas) graficaAreas.destroy();
 
-    graficaAreas = new Chart(
-        $("graficaAreas"),
+graficaAreas = new Chart(
         {
             type: "bar",
             data: {
