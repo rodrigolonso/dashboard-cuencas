@@ -481,8 +481,9 @@ function actualizarBarras(datos) {
     if (graficaAreas) graficaAreas.destroy();
 
 graficaAreas = new Chart(
-        {
-            type: "bar",
+    document.getElementById("graficaAreas").getContext("2d"),
+    {
+        type: "bar",
             data: {
                 labels: mayores.map(a => a.NMGCUENCA),
                 datasets: [{
