@@ -433,8 +433,15 @@ function actualizarTorta(a) {
         graficaCoberturas.destroy();
     }
 
-    graficaCoberturas = new Chart(
-        $("graficaCoberturas"),
+const canvasTorta = document.getElementById("graficaCoberturas");
+
+if (!canvasTorta) {
+    console.error("No se encontró el canvas graficaCoberturas");
+    return;
+}
+
+graficaCoberturas = new Chart(
+    canvasTorta.getContext("2d"),
         {
             type: "doughnut",
             data: {
