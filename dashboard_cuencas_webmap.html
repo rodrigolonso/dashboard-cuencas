@@ -1,143 +1,217 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Cuencas Medellín</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard de Cuencas Hidrográficas - Medellín</title>
 
 <link rel="stylesheet" href="https://js.arcgis.com/4.34/esri/themes/light/main.css">
 
-<!-- Primero Chart.js -->
+<!-- Cargar Chart.js antes de ArcGIS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
-
-<!-- Después ArcGIS -->
 <script src="https://js.arcgis.com/4.34/"></script>
 
-
 <style>
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 html, body {
-    margin: 0;
     height: 100%;
+    margin: 0;
     font-family: "Segoe UI", Arial, sans-serif;
-    background: #eef2f5;
+    background: #eff3f5;
+    color: #203340;
 }
 
 header {
-    background: #193c50;
-    color: white;
-    padding: 13px 20px;
+    height: 66px;
+    background: #1d394c;
+    color: #fff;
+    padding: 10px 17px;
 }
 
 header h1 {
-    margin: 0;
-    font-size: 21px;
+    margin: 0 0 4px;
+    font-size: 20px;
     font-weight: 600;
 }
 
 header small {
-    color: #d1dfe6;
+    color: #d7e5ef;
+    font-size: 11px;
 }
 
 main {
+    height: calc(100vh - 66px);
     display: grid;
-    grid-template-columns: 390px minmax(0, 1fr);
-    height: calc(100vh - 67px);
+    grid-template-columns: 370px minmax(0, 1fr);
 }
 
 aside {
-    padding: 15px;
     overflow-y: auto;
-    background: #f1f5f7;
+    padding: 13px;
+    background: #f0f4f6;
 }
 
 #viewDiv {
     width: 100%;
     height: 100%;
+    min-width: 0;
+    min-height: 0;
 }
 
 .card {
-    background: white;
-    border: 1px solid #dce4e8;
+    background: #fff;
+    border: 1px solid #dce5ea;
     border-radius: 9px;
-    padding: 15px;
-    margin-bottom: 13px;
+    padding: 14px;
+    margin-bottom: 12px;
 }
 
 .card h3 {
     font-size: 15px;
+    color: #204b63;
     margin: 0 0 12px;
-    color: #23465a;
+    font-weight: 600;
 }
 
-.indicadores {
+.grid2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
 }
 
-.indicador {
-    background: #edf4f7;
+.metric {
+    background: #eef5f8;
     border-radius: 7px;
-    padding: 12px;
+    padding: 11px;
+    min-width: 0;
 }
 
-.indicador .valor {
-    font-size: 25px;
+.metric .value {
+    font-size: 23px;
     font-weight: 700;
-    color: #174d69;
+    color: #135375;
     overflow-wrap: anywhere;
 }
 
-.indicador .etiqueta {
+.metric .name {
+    color: #536979;
     font-size: 11px;
-    color: #536672;
     margin-top: 5px;
+    line-height: 1.4;
 }
 
-button {
-    background: #176181;
-    color: white;
-    border: none;
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #114a62;
+#nombreCuenca {
+    font-size: 16px;
+    font-weight: 600;
+    color: #165672;
+    margin: 0 0 13px;
 }
 
 canvas {
     width: 100% !important;
+    height: 100% !important;
 }
 
-.chart-container {
+.chart-wrap {
     position: relative;
-    height: 260px;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-wrap.chart-thematic {
+    height: 290px;
+}
+
+.hint {
+    font-size: 11px;
+    color: #607586;
+    line-height: 1.5;
+    margin: 9px 0 0;
 }
 
 #estado {
     font-size: 12px;
-    color: #526674;
-    margin-top: 8px;
+    color: #466578;
+    margin-top: 10px;
+    line-height: 1.5;
     overflow-wrap: anywhere;
 }
 
-#cuencaSeleccionada {
-    font-size: 16px;
-    color: #164e68;
-    font-weight: 600;
-    margin-bottom: 10px;
+button {
+    border: 0;
+    border-radius: 6px;
+    background: #176181;
+    color: #fff;
+    padding: 9px 12px;
+    cursor: pointer;
 }
 
-@media (max-width: 800px) {
+button:hover {
+    background: #0f4b65;
+}
+
+select {
+    background: #fff;
+    border: 1px solid #cad6dd;
+    border-radius: 5px;
+    width: 100%;
+    padding: 8px 7px;
+    color: #21475d;
+    font-size: 12px;
+}
+
+label {
+    display: block;
+    font-size: 12px;
+    margin: 9px 0 5px;
+    color: #405d6f;
+}
+
+fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+details {
+    border-top: 1px solid #e3eaee;
+    margin-top: 12px;
+    padding-top: 9px;
+}
+
+summary {
+    font-size: 12px;
+    color: #176181;
+    cursor: pointer;
+    user-select: none;
+}
+
+#sinDatosGrafica {
+    font-size: 12px;
+    color: #8d5430;
+    background: #fff7ed;
+    border: 1px solid #f5dcc2;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 9px;
+    display: none;
+}
+
+.panel-mapa-desplegable {
+    width: min(310px, 76vw);
+    max-height: min(65vh, 520px);
+    overflow: auto;
+    background: white;
+}
+
+@media (max-width: 820px) {
     main {
         grid-template-columns: 1fr;
-        grid-template-rows: 47vh 1fr;
-        height: calc(100vh - 67px);
+        grid-template-rows: 46vh minmax(0, 1fr);
     }
 
     #viewDiv {
@@ -155,87 +229,212 @@ canvas {
 
 <header>
     <h1>Dashboard de Cuencas Hidrográficas</h1>
-    <small>Planes Maestros del Sistema Hídrico | Distrito de Medellín</small>
+    <small>
+        Planes Maestros del Sistema Hídrico | Distrito de Medellín
+    </small>
 </header>
 
 <main>
 
 <aside>
 
-    <div class="card">
+    <!-- RESUMEN GENERAL -->
+    <section class="card">
         <h3>Resumen general</h3>
 
-        <div class="indicadores">
-            <div class="indicador">
-                <div class="valor" id="totalCuencas">--</div>
-                <div class="etiqueta">Cuencas consultadas</div>
+        <div class="grid2">
+            <div class="metric">
+                <div class="value" id="totalCuencas">--</div>
+                <div class="name">Cuencas consultadas</div>
             </div>
 
-            <div class="indicador">
-                <div class="valor" id="areaTotal">--</div>
-                <div class="etiqueta">Área natural acumulada (km²)</div>
+            <div class="metric">
+                <div class="value" id="areaTotal">--</div>
+                <div class="name">
+                    Área natural acumulada (km²)
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="card">
+    <!-- GRAFICA TOP 10 -->
+    <section class="card">
         <h3>Cuencas de mayor superficie</h3>
-        <div class="chart-container">
-            <canvas id="graficaAreas"></canvas>
-        </div>
-        <p style="font-size:11px;color:#62717c">
-            Diez cuencas con mayor área natural. Selecciona una barra
-            para consultar la cuenca correspondiente.
-        </p>
-    </div>
 
-    <div class="card">
+        <div class="chart-wrap">
+            <canvas
+                id="graficaAreas"
+                aria-label="Diez cuencas de mayor superficie">
+            </canvas>
+        </div>
+
+        <p class="hint">
+            Selecciona una barra para acercar el mapa
+            y consultar la cuenca.
+        </p>
+    </section>
+
+    <!-- CUENCA SELECCIONADA -->
+    <section class="card">
         <h3>Cuenca seleccionada</h3>
 
-        <div id="cuencaSeleccionada">
-            Selecciona un polígono en el mapa
+        <div id="nombreCuenca">
+            Selecciona un polígono de Cuenca_N
         </div>
 
-        <div class="indicadores">
-            <div class="indicador">
-                <div class="valor" id="areaCuenca">--</div>
-                <div class="etiqueta">Área natural (km²)</div>
+        <div class="grid2" id="tarjetasIndicadores">
+
+            <div class="metric">
+                <div class="value" id="valor0">--</div>
+                <div class="name" id="etiqueta0">
+                    Área natural (km²)
+                </div>
             </div>
 
-            <div class="indicador">
-                <div class="valor" id="pendienteCuenca">--</div>
-                <div class="etiqueta">Pendiente media (%)</div>
+            <div class="metric">
+                <div class="value" id="valor1">--</div>
+                <div class="name" id="etiqueta1">
+                    Pendiente media (%)
+                </div>
             </div>
 
-            <div class="indicador">
-                <div class="valor" id="longitudRed">--</div>
-                <div class="etiqueta">Longitud red hidrográfica (km)</div>
+            <div class="metric">
+                <div class="value" id="valor2">--</div>
+                <div class="name" id="etiqueta2">
+                    Longitud red hidrográfica (km)
+                </div>
             </div>
 
-            <div class="indicador">
-                <div class="valor" id="densidadDrenaje">--</div>
-                <div class="etiqueta">Densidad drenaje (km/km²)</div>
+            <div class="metric">
+                <div class="value" id="valor3">--</div>
+                <div class="name" id="etiqueta3">
+                    Densidad drenaje (km/km²)
+                </div>
             </div>
+
         </div>
-    </div>
 
-    <div class="card">
-        <h3>Coberturas terrestres nivel 1</h3>
+        <!-- SELECTOR DE CUATRO INDICADORES -->
+        <details id="configurarIndicadores">
+            <summary>
+                Configurar los cuatro indicadores
+            </summary>
 
-        <div class="chart-container">
-            <canvas id="graficaCoberturas"></canvas>
+            <fieldset id="selectoresIndicadores">
+
+                <label for="campo0">Indicador 1</label>
+                <select id="campo0"></select>
+
+                <label for="campo1">Indicador 2</label>
+                <select id="campo1"></select>
+
+                <label for="campo2">Indicador 3</label>
+                <select id="campo2"></select>
+
+                <label for="campo3">Indicador 4</label>
+                <select id="campo3"></select>
+
+            </fieldset>
+
+            <p class="hint">
+                Puedes escoger cuatro campos numéricos distintos.
+                La densidad de drenaje se calcula como
+                longitud de red dividida entre área natural.
+            </p>
+
+        </details>
+
+    </section>
+
+    <!-- SELECTOR DE GRAFICAS TEMATICAS -->
+    <section class="card">
+
+        <h3>Distribución temática de la cuenca</h3>
+
+        <label for="selectorTema">
+            Seleccionar distribución
+        </label>
+
+        <select id="selectorTema">
+
+            <option value="n1">
+                Coberturas terrestres nivel 1
+            </option>
+
+            <option value="n2">
+                Coberturas terrestres nivel 2
+            </option>
+
+            <option value="suelo">
+                Clasificación del suelo
+            </option>
+
+            <option value="texturas">
+                Texturas del suelo
+            </option>
+
+            <option value="vias">
+                Longitud de vías por categoría
+            </option>
+
+            <option value="hand">
+                Distribución HAND
+            </option>
+
+            <option value="twi">
+                Distribución TWI
+            </option>
+
+            <option value="redSuelo">
+                Red hidrográfica por tipo de suelo
+            </option>
+
+            <option value="drenajes">
+                Drenaje natural e intervenido (longitud)
+            </option>
+
+            <option value="alcantarillado">
+                Redes de alcantarillado (longitud)
+            </option>
+
+            <option value="estructuras">
+                Infraestructura hidráulica (conteos)
+            </option>
+
+        </select>
+
+        <div class="chart-wrap chart-thematic">
+            <canvas
+                id="graficaTematica"
+                aria-label="Distribución de categorías">
+            </canvas>
         </div>
 
-        <p style="font-size:11px;color:#62717c">
-            Porcentaje de bosques y áreas seminaturales,
-            territorios agrícolas y territorios artificializados.
+        <div id="sinDatosGrafica" role="status"></div>
+
+        <p id="notaTema" class="hint">
+            Selecciona una cuenca para visualizar su distribución.
         </p>
-    </div>
 
-    <div class="card">
-        <button id="btnInicio">Volver a Medellín</button>
-        <div id="estado">Iniciando dashboard...</div>
-    </div>
+    </section>
+
+    <!-- ESTADO -->
+    <section class="card">
+
+        <button type="button" id="btnInicio">
+            Volver a Medellín
+        </button>
+
+        <p class="hint">
+            Utiliza los botones superiores derechos del mapa
+            para abrir Capas y Leyenda.
+        </p>
+
+        <div id="estado" role="status">
+            Cargando Web Map...
+        </div>
+
+    </section>
 
 </aside>
 
@@ -244,30 +443,105 @@ canvas {
 </main>
 
 <script>
+"use strict";
 
-const API_KEY = "AAPTaayf2gKoXgnxqIhOq6AUnQQ..q8lBCAm7-WAgfsm0ur0gDuP87JOD22K2b-xIYzQo-DfcWF_69XrEIFMhP1q3OziUlhPWrBncGdCxTv9F2BDqBGRUem5Fmdj3XcVZaer_SI4EtCazlTR2hmmMuzSyRWd3QrPnC32R6VzZi3F9NzJXlzgE7IIAYN80Vq_IQN3067pVmy2j1wkaNqjJLgEwQQ4-HBJ1Vv_HbQY3-gvR2O_wrxdOpciwUnse8mwMaEStMfSvCqXVAq9k8Z-aXmcPOMiIT-AOLmsBiQm2AT1_WZEvd0HH";
+// =====================================================
+// 1. CONFIGURACIÓN GENERAL
+// =====================================================
 
-const WEBMAP_ID = "e9084da10e1941b4a5c650eab8694af9";
+// Sustituir la clave únicamente por una API Key vigente,
+// autorizada y sin permisos de edición de entidades.
 
-const URL_CUENCAS =
-"https://services2.arcgis.com/wEXW4SJ1RjesNPgA/arcgis/rest/services/Cuenca_N/FeatureServer";
+const API_KEY = "AAPTatZi4raxlt8bUV-_FiAHwIg..yr4s4Knk2CYKj44gSPKkL_C9zUlI-zmZ4J9sMmocD_LJrK2pgixt0hhiOI12_nxCbU6L4I-_z9_8Wq56fAegnp1wvcsL7w4dTlYHnQ1bEXnwfRz8E1m49pVaZRHZCFaRukemC2TimzPfUS3GHR2FKzSQDAsmt9OcXWKGowKzMlMw323ShI3L7NlVJxT16ngxDwwKo5xaM1uVrQyxDxDoklFzXIam7BDOYulqJBd3y7zpBH6AdP9M7d68hi3MxFMY6Ik400REbytglWfIHg..AT1_WZEvd0HH";
+
+const WEBMAP_ID =
+    "e9084da10e1941b4a5c650eab8694af9";
+
+const CAMPOS_INICIALES = [
+    "AREA_N_KM2",
+    "PEND_CU_PCT",
+    "L_RED_KM",
+    "CALC_DENSIDAD"
+];
+
+const NUMERICO = new Set([
+    "integer",
+    "small-integer",
+    "single",
+    "double",
+    "long",
+    "big-integer"
+]);
+
+const EXCLUIR = new Set([
+    "OBJECTID",
+    "Shape_Length",
+    "Shape_Area",
+    "Shape__Area",
+    "Shape__Length"
+]);
+
+const $ = id => document.getElementById(id);
 
 const formato = new Intl.NumberFormat("es-CO", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
 });
 
+function estado(mensaje) {
+    $("estado").textContent = mensaje;
+    console.log("[Cuencas]", mensaje);
+}
+
+function val(valor) {
+
+    if (
+        valor === null ||
+        valor === undefined ||
+        valor === ""
+    ) {
+        return null;
+    }
+
+    if (typeof valor === "number") {
+        return Number.isFinite(valor) ? valor : null;
+    }
+
+    let texto = String(valor).trim();
+
+    if (texto.includes(",")) {
+        texto = texto.replace(/\./g, "");
+        texto = texto.replace(",", ".");
+    }
+
+    const n = Number(texto);
+
+    return Number.isFinite(n) ? n : null;
+}
+
+function fmt(numero) {
+    const n = val(numero);
+    return n === null ? "--" : formato.format(n);
+}
+
+// =====================================================
+// 2. DICCIONARIO DE ALIAS
+// =====================================================
+
 const aliasPersonalizados = {
+
     "FID_R": "Código de cuenca",
     "NMGCUENCA": "Nombre de cuenca",
     "Responsable": "Profesional responsable",
     "CAPA_R": "Capa de referencia",
+
     "ORD_STRAH": "Orden Horton-Strahler",
     "AREA_N_KM2": "Área de cuenca natural (km²)",
     "PERIM_N_KM": "Perímetro de cuenca natural (km)",
     "PEND_CU_PCT": "Pendiente media de cuenca (%)",
     "AREA_A_KM2": "Área de cuenca antrópica (km²)",
     "CAMBIO_A_P": "Cambio de área natural a antrópica (%)",
+
     "N_ESTR_HID": "Número de estructuras hidráulicas",
     "L_PRIN_KM": "Longitud del cauce principal (km)",
     "PEND_PR_P": "Pendiente media del cauce principal (%)",
@@ -276,36 +550,42 @@ const aliasPersonalizados = {
     "L_RED_KM": "Longitud total red hidrográfica (km)",
     "DENS_DREN": "Densidad de drenaje (km/km²)",
     "DENS_URB": "Densidad de drenaje en suelo urbano",
+
     "L_COB_KM": "Longitud de drenajes en cobertura (km)",
     "P_COB": "Drenajes en cobertura (%)",
     "L_CAN_KM": "Longitud de drenajes en canal (km)",
     "P_CAN": "Drenajes en canal (%)",
     "L_NAT_KM": "Longitud de drenajes naturales (km)",
     "P_NAT": "Drenajes naturales (%)",
+
     "L_URB_KM": "Longitud de drenajes en suelo urbano (km)",
     "P_URB": "Red hidrográfica en suelo urbano (%)",
     "L_SUB_KM": "Longitud de drenajes en suelo suburbano (km)",
     "P_SUB": "Red hidrográfica en suelo suburbano (%)",
     "L_RUR_KM": "Longitud de drenajes en suelo rural (km)",
     "P_RUR": "Red hidrográfica en suelo rural (%)",
+
     "N1_BOS_KM2": "Bosques y áreas seminaturales (km²)",
     "N1_BOS_P": "Bosques y áreas seminaturales (%)",
     "N1_AGR_KM2": "Territorios agrícolas (km²)",
     "N1_AGR_P": "Territorios agrícolas (%)",
     "N1_ART_KM2": "Territorios artificializados (km²)",
     "N1_ART_P": "Territorios artificializados (%)",
+
     "POT_URB_KM2": "Suelo urbano (km²)",
     "POT_URB_P": "Suelo urbano (%)",
     "POT_SUB_KM2": "Suelo suburbano (km²)",
     "POT_SUB_P": "Suelo suburbano (%)",
     "POT_RUR_KM2": "Suelo rural (km²)",
     "POT_RUR_P": "Suelo rural (%)",
+
     "TEX_MED_KM2": "Texturas medias (km²)",
     "TEX_GRU_KM2": "Texturas gruesas (km²)",
     "TEX_FIN_KM2": "Texturas finas (km²)",
     "TEX_MED_P": "Texturas medias (%)",
     "TEX_GRU_P": "Texturas gruesas (%)",
     "TEX_FIN_P": "Texturas finas (%)",
+
     "V_AP_L_KM": "Longitud de vías principales (km)",
     "V_AP_A_M2": "Área de vías principales (m²)",
     "V_AM_L_KM": "Longitud de vías secundarias (km)",
@@ -316,273 +596,782 @@ const aliasPersonalizados = {
     "V_RUR_A_M2": "Área de vías rurales (m²)",
     "V_LOC_L_KM": "Longitud de vías locales (km)",
     "V_LOC_A_M2": "Área de vías locales (m²)",
+
     "V_PEND_P": "Pendiente media de las vías (%)",
     "V_AREA_KM2": "Área de la red vial (km²)",
     "V_LONG_KM": "Longitud total de vías (km)",
     "V_DENSIDAD": "Densidad vial (km/km²)",
+
     "HAND_GT1_KM2": "Área HAND mayor a 1 m (km²)",
     "HAND_05_1_KM2": "Área HAND de 0,5 a 1 m (km²)",
     "HAND_02_05_KM2": "Área HAND de 0,2 a 0,5 m (km²)",
     "HAND_01_02_KM2": "Área HAND de 0,1 a 0,2 m (km²)",
     "HAND_0_01_KM2": "Área HAND de 0 a 0,1 m (km²)",
+
     "TWI_M77_83_KM2": "Área TWI clase 770 (km²)",
     "TWI_83_104_KM2": "Área TWI 8,3 a 10,4 (km²)",
     "TWI_104_128_KM2": "Área TWI 10,4 a 12,8 (km²)",
     "TWI_128_167_KM2": "Área TWI 12,8 a 16,7 (km²)",
     "TWI_GT167_KM2": "Área TWI mayor a 16,7 (km²)",
+
     "PEND_URB_P": "Pendiente media en suelo urbano (%)",
     "PEND_SUB_P": "Pendiente media en suelo suburbano (%)",
     "PEND_RUR_P": "Pendiente media en suelo rural (%)",
+
     "IUA": "Índice de uso del agua",
     "IRH": "Índice de regulación hídrica",
     "IVH": "Índice de vulnerabilidad hídrica",
+
     "N_DEPRIMIDOS": "Número de deprimidos",
     "N_DESCARGAS": "Número de descargas",
     "N_ALIVIADEROS": "Número de aliviaderos",
+
     "RED_LLUV_KM": "Red de alcantarillado pluvial (km)",
     "RED_SAN_KM": "Red de alcantarillado sanitario (km)",
     "RED_COMB_KM": "Red de alcantarillado combinado (km)",
     "RED_DREN_KM": "Red de drenaje (km)"
 };
 
-let mapaVista;
-let capaCuencas;
-let graficaAreas;
-let graficaCoberturas;
+// =====================================================
+// 3. DEFINICIÓN DE GRÁFICAS TEMÁTICAS
+// =====================================================
+
+const TEMAS = {
+
+    n1: {
+        tipo: "doughnut",
+        unidad: "%",
+        nota: "Porcentajes N1 reportados por el servicio. " +
+              "La suma puede diferir del 100 %.",
+        campos: [
+            ["N1_BOS_P", "Bosques y seminaturales"],
+            ["N1_AGR_P", "Territorios agrícolas"],
+            ["N1_ART_P", "Artificializados"]
+        ]
+    },
+
+    n2: {
+        tipo: "doughnut",
+        unidad: "valor",
+        nota: "Distribución relativa de valores N2. " +
+              "Verificar unidades antes de interpretar " +
+              "estos datos como porcentajes.",
+        campos: [
+            ["N2_CTRANS", "Cultivos transitorios"],
+            ["N2_CPERM", "Cultivos permanentes"],
+            ["N2_PAST", "Pastos"],
+            ["N2_AGRHET", "Agricultura heterogénea"],
+            ["N2_BOS", "Bosques"],
+            ["N2_HERBAR", "Herbazales"],
+            ["N2_ABI", "Áreas abiertas"],
+            ["N2_MIN", "Minería"],
+            ["N2_ZVERDE", "Zonas verdes"]
+        ]
+    },
+
+    suelo: {
+        tipo: "doughnut",
+        unidad: "km²",
+        nota: "Proporción respecto a la superficie clasificada.",
+        campos: [
+            ["POT_URB_KM2", "Urbano"],
+            ["POT_SUB_KM2", "Suburbano"],
+            ["POT_RUR_KM2", "Rural"]
+        ]
+    },
+
+    texturas: {
+        tipo: "doughnut",
+        unidad: "km²",
+        nota: "Proporción de las áreas con textura clasificada.",
+        campos: [
+            ["TEX_MED_KM2", "Media"],
+            ["TEX_GRU_KM2", "Gruesa"],
+            ["TEX_FIN_KM2", "Fina"]
+        ]
+    },
+
+    vias: {
+        tipo: "doughnut",
+        unidad: "km",
+        nota: "Distribución de la longitud vial " +
+              "entre las categorías registradas.",
+        campos: [
+            ["V_AP_L_KM", "Principales"],
+            ["V_AM_L_KM", "Secundarias"],
+            ["V_COL_L_KM", "Colectoras"],
+            ["V_RUR_L_KM", "Rurales"],
+            ["V_LOC_L_KM", "Locales"]
+        ]
+    },
+
+    hand: {
+        tipo: "doughnut",
+        unidad: "km²",
+        nota: "Distribución relativa de las superficies " +
+              "clasificadas en HAND.",
+        campos: [
+            ["HAND_GT1_KM2", "Mayor de 1 m"],
+            ["HAND_05_1_KM2", "0,5 a 1 m"],
+            ["HAND_02_05_KM2", "0,2 a 0,5 m"],
+            ["HAND_01_02_KM2", "0,1 a 0,2 m"],
+            ["HAND_0_01_KM2", "0 a 0,1 m"]
+        ]
+    },
+
+    twi: {
+        tipo: "doughnut",
+        unidad: "km²",
+        nota: "Distribución relativa por clases TWI. " +
+              "La primera clase contempla la agrupación " +
+              "de las clases raster 0 y 1.",
+        campos: [
+            ["TWI_M77_83_KM2", "Clase 770"],
+            ["TWI_83_104_KM2", "8,3 a 10,4"],
+            ["TWI_104_128_KM2", "10,4 a 12,8"],
+            ["TWI_128_167_KM2", "12,8 a 16,7"],
+            ["TWI_GT167_KM2", "Mayor a 16,7"]
+        ]
+    },
+
+    redSuelo: {
+        tipo: "doughnut",
+        unidad: "km",
+        nota: "Longitud hidrográfica por clasificación de suelo.",
+        campos: [
+            ["L_URB_KM", "Urbano"],
+            ["L_SUB_KM", "Suburbano"],
+            ["L_RUR_KM", "Rural"]
+        ]
+    },
+
+    drenajes: {
+        tipo: "doughnut",
+        unidad: "km",
+        nota: "Longitudes de drenajes naturales, canalizados " +
+              "y cubiertos. No representan cantidades de tramos.",
+        campos: [
+            ["L_NAT_KM", "Natural"],
+            ["L_CAN_KM", "En canal"],
+            ["L_COB_KM", "En cobertura"]
+        ]
+    },
+
+    alcantarillado: {
+        tipo: "doughnut",
+        unidad: "km",
+        nota: "Longitudes de redes pluvial, sanitaria y " +
+              "combinada. Verificar que las categorías " +
+              "sean excluyentes.",
+        campos: [
+            ["RED_LLUV_KM", "Pluvial"],
+            ["RED_SAN_KM", "Sanitaria"],
+            ["RED_COMB_KM", "Combinada"]
+        ]
+    },
+
+    estructuras: {
+        tipo: "bar",
+        unidad: "unidades",
+        nota: "Conteos independientes. Las descargas, " +
+              "aliviaderos y deprimidos podrían formar parte " +
+              "del total de estructuras hidráulicas; " +
+              "por eso se muestran como barras, no como torta.",
+        campos: [
+            ["N_ESTR_HID", "Estructuras hidráulicas"],
+            ["N_DESCARGAS", "Descargas"],
+            ["N_ALIVIADEROS", "Aliviaderos"],
+            ["N_DEPRIMIDOS", "Deprimidos"]
+        ]
+    }
+};
+
+const PALETA = [
+    "#348267",
+    "#dfb44e",
+    "#b97470",
+    "#5e9bc5",
+    "#8d73b5",
+    "#7fbb9b",
+    "#d48c49",
+    "#7a98ac",
+    "#c49c9c"
+];
+
+// =====================================================
+// 4. VARIABLES
+// =====================================================
+
+let view = null;
+let capaCuencas = null;
+
+let graficaAreas = null;
+let graficaTematica = null;
+
+let actual = null;
 let resumenCuencas = [];
+let opcionesNumericas = [];
 
-const $ = id => document.getElementById(id);
+let seleccionIndicadores = CAMPOS_INICIALES.slice();
 
-function estado(mensaje) {
-    $("estado").textContent = mensaje;
-}
+// Recuperar preferencias guardadas en el navegador.
 
-function numero(valor) {
-    if (valor === null || valor === undefined || valor === "") {
-        return "--";
-    }
-    const n = Number(valor);
-    return Number.isFinite(n) ? formato.format(n) : "--";
-}
+try {
 
-function valorNumerico(valor) {
-    if (valor === null || valor === undefined || valor === "") {
-        return null;
-    }
-    const n = Number(valor);
-    return Number.isFinite(n) ? n : null;
-}
+    const previo = JSON.parse(
+        localStorage.getItem("cuencas_indicadores_4") || "null"
+    );
 
-function mostrarCuenca(a) {
-
-    if (!a) return;
-
-    $("cuencaSeleccionada").textContent =
-        a.NMGCUENCA || "Cuenca sin nombre";
-
-    $("areaCuenca").textContent = numero(a.AREA_N_KM2);
-    $("pendienteCuenca").textContent = numero(a.PEND_CU_PCT);
-    $("longitudRed").textContent = numero(a.L_RED_KM);
-    const area = valorNumerico(a.AREA_N_KM2);
-const longitud = valorNumerico(a.L_RED_KM);
-
-const densidad = (area !== null && area > 0 && longitud !== null)
-    ? longitud / area
-    : null;
-
-$("densidadDrenaje").textContent = numero(densidad);
-
-    actualizarTorta(a);
-}
-
-function actualizarTorta(a) {
-
-    const campos = [
-        "N1_BOS_P",
-        "N1_AGR_P",
-        "N1_ART_P"
-    ];
-
-    const nombres = [
-        "Bosques y seminaturales",
-        "Agrícolas",
-        "Artificializados"
-    ];
-
-    const colores = [
-        "#33805d",
-        "#dfba59",
-        "#bc7772"
-    ];
-
-    const datos = [];
-    const etiquetas = [];
-    const coloresFinales = [];
-
-    campos.forEach((campo, i) => {
-        const n = valorNumerico(a[campo]);
-
-        if (n !== null && n > 0) {
-            datos.push(n);
-            etiquetas.push(nombres[i]);
-            coloresFinales.push(colores[i]);
-        }
-    });
-
-    if (graficaCoberturas) {
-        graficaCoberturas.destroy();
+    if (
+        Array.isArray(previo) &&
+        previo.length === 4 &&
+        new Set(previo).size === 4
+    ) {
+        seleccionIndicadores = previo;
     }
 
-const canvasTorta = document.getElementById("graficaCoberturas");
+    const tema = localStorage.getItem("cuencas_tema");
 
-if (!canvasTorta) {
-    console.error("No se encontró el canvas graficaCoberturas");
-    return;
+    if (TEMAS[tema]) {
+        $("selectorTema").value = tema;
+    }
+
+} catch (error) {
+    console.warn("Preferencias no disponibles:", error);
 }
 
-graficaCoberturas = new Chart(
-    canvasTorta.getContext("2d"),
-        {
-            type: "doughnut",
-            data: {
-                labels: etiquetas,
-                datasets: [{
-                    data: datos,
-                    backgroundColor: coloresFinales
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: "bottom"
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx =>
-                                ctx.label + ": " +
-                                numero(ctx.raw) + " %"
-                        }
-                    }
-                }
-            }
-        }
+// =====================================================
+// 5. INDICADORES CONFIGURABLES
+// =====================================================
+
+function aliasCampo(nombre) {
+
+    return (
+        aliasPersonalizados[nombre] ||
+        capaCuencas?.fields.find(
+            f => f.name === nombre
+        )?.alias ||
+        nombre
     );
 }
 
-function actualizarBarras(datos) {
-    const canvas = document.getElementById("graficaAreas");
-    if (!canvas || typeof Chart === "undefined") {
-        estado("No se encontró el canvas de barras o Chart.js no cargó.");
+function datosIndicador(atributos, nombre) {
+
+    if (!atributos) {
+        return null;
+    }
+
+    if (nombre === "CALC_DENSIDAD") {
+
+        const area = val(atributos.AREA_N_KM2);
+        const longitud = val(atributos.L_RED_KM);
+
+        if (
+            area !== null &&
+            area > 0 &&
+            longitud !== null
+        ) {
+            return longitud / area;
+        }
+
+        return null;
+    }
+
+    return val(atributos[nombre]);
+}
+
+function etiquetaIndicador(nombre) {
+
+    if (nombre === "CALC_DENSIDAD") {
+        return "Densidad de drenaje calculada (km/km²)";
+    }
+
+    return aliasCampo(nombre);
+}
+
+function configurarSelectores() {
+
+    opcionesNumericas = [{
+        valor: "CALC_DENSIDAD",
+        etiqueta: "Densidad de drenaje calculada (km/km²)"
+    }];
+
+    capaCuencas.fields.forEach(campo => {
+
+        if (
+            NUMERICO.has(campo.type) &&
+            !EXCLUIR.has(campo.name) &&
+            campo.name !== capaCuencas.objectIdField
+        ) {
+            opcionesNumericas.push({
+                valor: campo.name,
+                etiqueta: aliasCampo(campo.name)
+            });
+        }
+
+    });
+
+    const permitidos = new Set(
+        opcionesNumericas.map(x => x.valor)
+    );
+
+    seleccionIndicadores = seleccionIndicadores.map(
+        (campo, i) =>
+            permitidos.has(campo)
+                ? campo
+                : CAMPOS_INICIALES[i]
+    );
+
+    for (let i = 0; i < 4; i++) {
+
+        const selector = $("campo" + i);
+
+        selector.replaceChildren();
+
+        opcionesNumericas.forEach(opcion => {
+
+            const elemento = document.createElement("option");
+
+            elemento.value = opcion.valor;
+            elemento.textContent = opcion.etiqueta;
+
+            selector.appendChild(elemento);
+
+        });
+
+        selector.value = seleccionIndicadores[i];
+
+        selector.addEventListener("change", () => {
+
+            const nuevoCampo = selector.value;
+
+            if (
+                seleccionIndicadores.includes(nuevoCampo) &&
+                seleccionIndicadores[i] !== nuevoCampo
+            ) {
+
+                estado(
+                    "El indicador ya está seleccionado en otra tarjeta."
+                );
+
+                selector.value = seleccionIndicadores[i];
+
+                return;
+            }
+
+            seleccionIndicadores[i] = nuevoCampo;
+
+            try {
+                localStorage.setItem(
+                    "cuencas_indicadores_4",
+                    JSON.stringify(seleccionIndicadores)
+                );
+            } catch (error) {
+                console.warn(error);
+            }
+
+            actualizarTarjetas();
+
+        });
+
+    }
+
+    actualizarTarjetas();
+}
+
+function actualizarTarjetas() {
+
+    for (let i = 0; i < 4; i++) {
+
+        const campo = seleccionIndicadores[i];
+
+        $("valor" + i).textContent =
+            fmt(datosIndicador(actual, campo));
+
+        $("etiqueta" + i).textContent =
+            etiquetaIndicador(campo);
+    }
+}
+
+function mostrarCuenca(atributos) {
+
+    if (!atributos) {
         return;
     }
-    const mayores = datos
-        .map(a => ({ ...a, AREA_NUM: valorNumerico(a.AREA_N_KM2) }))
-        .filter(a => a.AREA_NUM !== null && Number.isFinite(a.AREA_NUM) && a.AREA_NUM >= 0)
-        .sort((a, b) => b.AREA_NUM - a.AREA_NUM)
-        .slice(0, 10);
-    if (!mayores.length) {
-        estado("No hay valores de AREA_N_KM2 válidos para el gráfico.");
+
+    actual = atributos;
+
+    $("nombreCuenca").textContent =
+        atributos.NMGCUENCA || "Cuenca sin nombre";
+
+    actualizarTarjetas();
+    actualizarTema();
+}
+
+// =====================================================
+// 6. GRAFICA TEMATICA DINAMICA
+// =====================================================
+
+function actualizarTema() {
+
+    const tema = TEMAS[$("selectorTema").value];
+
+    // Eliminar gráfica anterior.
+
+    if (graficaTematica) {
+
+        graficaTematica.destroy();
+        graficaTematica = null;
+    }
+
+    $("notaTema").textContent = tema.nota;
+
+    const aviso = $("sinDatosGrafica");
+
+    aviso.style.display = "none";
+
+    if (!actual) {
+
+        aviso.textContent =
+            "Selecciona una cuenca para generar la gráfica.";
+
+        aviso.style.display = "block";
+
         return;
     }
-    if (graficaAreas) graficaAreas.destroy();
-    graficaAreas = new Chart(canvas.getContext("2d"), {
-        type: "bar",
+
+    if (typeof Chart === "undefined") {
+
+        aviso.textContent =
+            "No se cargó la biblioteca Chart.js.";
+
+        aviso.style.display = "block";
+
+        return;
+    }
+
+    // Consultar campos del grupo seleccionado.
+
+    const categorias = tema.campos
+        .map(([campo, nombre]) => ({
+            nombre: nombre,
+            valor: datosIndicador(actual, campo)
+        }))
+        .filter(item =>
+            item.valor !== null &&
+            item.valor > 0
+        );
+
+    if (!categorias.length) {
+
+        aviso.textContent =
+            "Esta cuenca no tiene valores positivos " +
+            "disponibles para esta distribución.";
+
+        aviso.style.display = "block";
+
+        return;
+    }
+
+    const total = categorias.reduce(
+        (suma, item) => suma + item.valor,
+        0
+    );
+
+    const contexto =
+        $("graficaTematica").getContext("2d");
+
+    if (!contexto) {
+        return;
+    }
+
+    graficaTematica = new Chart(contexto, {
+
+        type: tema.tipo,
+
         data: {
-            labels: mayores.map(a => a.NMGCUENCA || "Cuenca sin nombre"),
+
+            labels: categorias.map(x => x.nombre),
+
             datasets: [{
-                label: "Área natural (km²)",
-                data: mayores.map(a => a.AREA_NUM),
-                backgroundColor: "#3386a0",
+
+                data: categorias.map(x => x.valor),
+
+                backgroundColor: categorias.map(
+                    (_, i) => PALETA[i % PALETA.length]
+                ),
+
+                borderWidth:
+                    tema.tipo === "doughnut" ? 2 : 0,
+
+                borderColor: "#fff",
+
+                borderRadius:
+                    tema.tipo === "bar" ? 4 : 0
+
+            }]
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            indexAxis:
+                tema.tipo === "bar" ? "y" : "x",
+
+            plugins: {
+
+                legend: {
+
+                    display: tema.tipo === "doughnut",
+
+                    position: "bottom",
+
+                    labels: {
+                        boxWidth: 13,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+
+                tooltip: {
+
+                    callbacks: {
+
+                        label: contexto => {
+
+                            const n = Number(contexto.raw);
+
+                            const textoBase =
+                                contexto.label +
+                                ": " +
+                                fmt(n) +
+                                " " +
+                                tema.unidad;
+
+                            if (tema.tipo === "doughnut") {
+
+                                const porcentaje =
+                                    (n / total) * 100;
+
+                                return textoBase +
+                                    " (" +
+                                    fmt(porcentaje) +
+                                    " % del total representado)";
+                            }
+
+                            return textoBase;
+                        }
+                    }
+                }
+            },
+
+            scales: tema.tipo === "bar"
+                ? {
+                    x: {
+                        beginAtZero: true
+                    },
+
+                    y: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
+                : {}
+        }
+    });
+}
+
+// Cambiar gráfica desde selector.
+
+$("selectorTema").addEventListener("change", () => {
+
+    try {
+
+        localStorage.setItem(
+            "cuencas_tema",
+            $("selectorTema").value
+        );
+
+    } catch (error) {
+        console.warn(error);
+    }
+
+    actualizarTema();
+
+});
+
+// =====================================================
+// 7. GRAFICA DE LAS 10 CUENCAS DE MAYOR SUPERFICIE
+// =====================================================
+
+function crearBarras(datos) {
+
+    if (
+        typeof Chart !== "function" ||
+        !$("graficaAreas")
+    ) {
+
+        estado(
+            "Chart.js no está disponible para mostrar barras."
+        );
+
+        return;
+    }
+
+    const mayores = datos
+
+        .map(atributos => ({
+            atributos: atributos,
+            area: val(atributos.AREA_N_KM2)
+        }))
+
+        .filter(item =>
+            item.area !== null &&
+            item.area >= 0
+        )
+
+        .sort((a, b) =>
+            b.area - a.area
+        )
+
+        .slice(0, 10);
+
+    if (graficaAreas) {
+        graficaAreas.destroy();
+    }
+
+    if (!mayores.length) {
+
+        estado(
+            "No hay áreas disponibles para la gráfica."
+        );
+
+        return;
+    }
+
+    const contexto =
+        $("graficaAreas").getContext("2d");
+
+    graficaAreas = new Chart(contexto, {
+
+        type: "bar",
+
+        data: {
+
+            labels: mayores.map(item =>
+                item.atributos.NMGCUENCA ||
+                "Cuenca sin nombre"
+            ),
+
+            datasets: [{
+
+                data: mayores.map(item => item.area),
+
+                backgroundColor: "#3e8aa8",
+
                 borderRadius: 4
             }]
         },
+
         options: {
-            indexAxis: "y",
+
             responsive: true,
+
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { beginAtZero: true, title: { display: true, text: "Área natural (km²)" } },
-                y: { ticks: { autoSkip: false, font: { size: 10 } } }
+
+            indexAxis: "y",
+
+            plugins: {
+
+                legend: {
+                    display: false
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: contexto =>
+                            fmt(contexto.raw) + " km²"
+                    }
+                }
             },
-            onClick: (_evento, elementos) => {
-                if (elementos.length) seleccionarPorId(mayores[elementos[0].index]);
+
+            scales: {
+
+                x: {
+
+                    beginAtZero: true,
+
+                    title: {
+                        display: true,
+                        text: "Área natural (km²)"
+                    }
+                },
+
+                y: {
+                    ticks: {
+                        autoSkip: false,
+                        font: {
+                            size: 10
+                        }
+                    }
+                }
+            },
+
+            onClick: (evento, elementos) => {
+
+                if (!elementos.length) {
+                    return;
+                }
+
+                const posicion = elementos[0].index;
+
+                const cuenca =
+                    mayores[posicion].atributos;
+
+                seleccionarCuencaPorId(cuenca);
+
             }
         }
     });
-    console.log("Gráfica de barras generada:", mayores.length, "cuencas");
 }
 
-async function seleccionarPorId(datos) {
-
-    mostrarCuenca(datos);
-
-    if (!capaCuencas) return;
-
-    const id = datos[capaCuencas.objectIdField];
-
-    if (id === null || id === undefined) return;
-
-    try {
-        const q = capaCuencas.createQuery();
-        q.objectIds = [id];
-        q.outFields = ["*"];
-        q.returnGeometry = true;
-
-        const resultado = await capaCuencas.queryFeatures(q);
-
-        if (!resultado.features.length) return;
-
-        const feature = resultado.features[0];
-
-        if (feature.geometry) {
-            await mapaVista.goTo(
-                { target: feature.geometry },
-                { duration: 450 }
-            );
-        }
-
-        mapaVista.openPopup({
-            features: [feature],
-            location: feature.geometry.extent
-                ? feature.geometry.extent.center
-                : feature.geometry
-        });
-
-    } catch (error) {
-        console.error(error);
-        estado("Error al seleccionar cuenca: " + error.message);
-    }
-}
+// =====================================================
+// 8. CONFIGURAR POPUP CON ALIAS
+// =====================================================
 
 function configurarPopup(capa) {
 
-    const excluidos = new Set([
-        "Shape",
-        "Shape_Length",
-        "Shape_Area",
-        "Shape__Area",
-        "Shape__Length"
-    ]);
-
     const campos = capa.fields
-        .filter(f => !excluidos.has(f.name))
-        .filter(f => f.type !== "geometry")
-        .map(f => ({
-            fieldName: f.name,
-            label: aliasPersonalizados[f.name] ||
-                   f.alias ||
-                   f.name,
+
+        .filter(campo =>
+            campo.type !== "geometry" &&
+            !EXCLUIR.has(campo.name)
+        )
+
+        .map(campo => ({
+
+            fieldName: campo.name,
+
+            label: aliasCampo(campo.name),
+
             visible: true
         }));
 
     capa.popupEnabled = true;
 
     capa.popupTemplate = {
+
         title: "{NMGCUENCA}",
+
         outFields: ["*"],
+
         content: [{
             type: "fields",
             fieldInfos: campos
@@ -590,122 +1379,391 @@ function configurarPopup(capa) {
     };
 }
 
-async function cargarEstadisticas() {
+// =====================================================
+// 9. CONSULTA INDIVIDUAL DE CUENCA
+// =====================================================
 
-    estado("Consultando estadísticas de cuencas...");
+async function consultarUnaCuenca(id, geometria) {
 
-    const q = capaCuencas.createQuery();
+    try {
 
-    q.where = "1=1";
-    q.outFields = ["*"];
-    q.returnGeometry = false;
+        const consulta =
+            capaCuencas.createQuery();
 
-    // La consulta se realiza por lotes de ObjectID para
-    // recuperar todas las entidades sin depender del límite
-    // de registros de una sola consulta.
+        consulta.objectIds = [id];
 
-    const ids = await capaCuencas.queryObjectIds(q);
+        consulta.outFields = ["*"];
 
-    if (!ids || ids.length === 0) {
-        estado("No se encontraron cuencas consultables.");
+        consulta.returnGeometry = !!geometria;
+
+        const resultado =
+            await capaCuencas.queryFeatures(consulta);
+
+        return resultado.features[0] || null;
+
+    } catch (error) {
+
+        console.error(error);
+
+        estado(
+            "Error consultando cuenca: " +
+            (error.message || error)
+        );
+
+        return null;
+    }
+}
+
+// =====================================================
+// 10. SELECCIÓN DESDE GRAFICA DE BARRAS
+// =====================================================
+
+async function seleccionarCuencaPorId(datos) {
+
+    if (!capaCuencas || !datos) {
         return;
     }
 
-    const lote = 100;
-    const entidades = [];
+    const id =
+        datos[capaCuencas.objectIdField];
 
-    for (let i = 0; i < ids.length; i += lote) {
-
-        const consulta = capaCuencas.createQuery();
-
-        consulta.objectIds = ids.slice(i, i + lote);
-        consulta.outFields = ["*"];
-        consulta.returnGeometry = false;
-
-        const respuesta = await capaCuencas.queryFeatures(consulta);
-
-        entidades.push(...respuesta.features);
+    if (id === undefined || id === null) {
+        return;
     }
 
-    resumenCuencas = entidades.map(f => f.attributes);
+    const feature =
+        await consultarUnaCuenca(id, true);
 
-    $("totalCuencas").textContent = resumenCuencas.length;
+    if (!feature) {
+        return;
+    }
 
-    const areas = resumenCuencas
-        .map(a => valorNumerico(a.AREA_N_KM2))
+    mostrarCuenca(feature.attributes);
+
+    if (feature.geometry) {
+
+        try {
+
+            await view.goTo(
+                {
+                    target: feature.geometry
+                },
+                {
+                    duration: 350
+                }
+            );
+
+        } catch (error) {
+            console.warn(
+                "No se pudo acercar:",
+                error
+            );
+        }
+
+        view.openPopup({
+
+            features: [feature],
+
+            location:
+                feature.geometry.extent?.center ||
+                feature.geometry
+
+        });
+    }
+}
+
+// =====================================================
+// 11. CONSULTAR ESTADÍSTICAS GENERALES
+// =====================================================
+
+async function cargarEstadisticas() {
+
+    estado(
+        "Consultando registros de Cuenca_N..."
+    );
+
+    const ids = await capaCuencas.queryObjectIds(
+        capaCuencas.createQuery()
+    );
+
+    const atributos = [];
+
+    // Consultas por lotes.
+
+    for (let i = 0; i < (ids || []).length; i += 100) {
+
+        const consulta =
+            capaCuencas.createQuery();
+
+        consulta.objectIds =
+            ids.slice(i, i + 100);
+
+        consulta.outFields = ["*"];
+
+        consulta.returnGeometry = false;
+
+        const resultado =
+            await capaCuencas.queryFeatures(consulta);
+
+        atributos.push(
+            ...resultado.features.map(
+                feature => feature.attributes
+            )
+        );
+    }
+
+    resumenCuencas = atributos;
+
+    $("totalCuencas").textContent =
+        atributos.length;
+
+    const areas = atributos
+
+        .map(a => val(a.AREA_N_KM2))
+
         .filter(n => n !== null);
 
     if (areas.length) {
-        const areaTotal = areas.reduce((s,n) => s+n, 0);
-        $("areaTotal").textContent = numero(areaTotal);
+
+        const suma = areas.reduce(
+            (total, area) => total + area,
+            0
+        );
+
+        $("areaTotal").textContent = fmt(suma);
+
     } else {
+
         $("areaTotal").textContent = "--";
     }
 
-    actualizarBarras(resumenCuencas);
+    crearBarras(atributos);
 
     estado(
-        "Consulta terminada. " +
-        resumenCuencas.length +
-        " cuencas disponibles."
+        "Cargadas " +
+        atributos.length +
+        " cuencas. Selecciona un polígono."
     );
 }
 
+// =====================================================
+// 12. CARGAR ARCGIS
+// =====================================================
+
 require([
+
     "esri/config",
     "esri/WebMap",
     "esri/views/MapView",
-    "esri/widgets/Legend"
+    "esri/widgets/Legend",
+    "esri/widgets/LayerList",
+    "esri/widgets/Expand"
+
 ], function(
+
     esriConfig,
     WebMap,
     MapView,
-    Legend
+    Legend,
+    LayerList,
+    Expand
+
 ) {
+
+    // Verificar que se haya introducido la API Key.
+
+    if (
+        API_KEY === "PEGA_AQUI_TU_NUEVA_API_KEY"
+    ) {
+
+        estado(
+            "Configura la API Key autorizada " +
+            "antes de usar el mapa."
+        );
+
+        return;
+    }
 
     esriConfig.apiKey = API_KEY;
 
     const webmap = new WebMap({
+
         portalItem: {
             id: WEBMAP_ID
         }
     });
 
-    const view = new MapView({
+    // =================================================
+    // 13. CREAR VISTA DEL MAPA
+    // =================================================
+
+    view = new MapView({
+
         container: "viewDiv",
+
         map: webmap,
+
         center: [-75.57, 6.25],
+
         zoom: 11,
+
         constraints: {
             rotationEnabled: false
         },
+
         navigation: {
+
             gamepad: {
                 enabled: false
             },
+
             momentumEnabled: false
         }
     });
 
-    mapaVista = view;
+    // Botón de navegación.
 
-    async function iniciar() {
+    $("btnInicio").addEventListener("click", () => {
+
+        view.goTo({
+
+            center: [-75.57, 6.25],
+
+            zoom: 11
+        });
+
+    });
+
+    // =================================================
+    // 14. CONTROLES DE CAPAS Y LEYENDA
+    // =================================================
+
+    const panelCapas =
+        document.createElement("div");
+
+    panelCapas.className =
+        "panel-mapa-desplegable";
+
+    const panelLeyenda =
+        document.createElement("div");
+
+    panelLeyenda.className =
+        "panel-mapa-desplegable";
+
+    // Listado de capas del Web Map.
+
+    const lista = new LayerList({
+
+        view: view,
+
+        container: panelCapas
+    });
+
+    // Leyenda del Web Map.
+
+    const leyenda = new Legend({
+
+        view: view,
+
+        container: panelLeyenda
+    });
+
+    // Botón para activar y desactivar panel de capas.
+
+    const toggleCapas = new Expand({
+
+        view: view,
+
+        content: lista,
+
+        expanded: false,
+
+        expandIcon: "layers",
+
+        expandTooltip: "Capas",
+
+        group: "paneles"
+    });
+
+    // Botón para abrir o cerrar la leyenda.
+
+    const toggleLeyenda = new Expand({
+
+        view: view,
+
+        content: leyenda,
+
+        expanded: false,
+
+        expandIcon: "legend",
+
+        expandTooltip: "Leyenda",
+
+        group: "paneles"
+    });
+
+    // Ambos botones van en la esquina superior derecha.
+
+    view.ui.add(
+        [toggleCapas, toggleLeyenda],
+        "top-right"
+    );
+
+    // =================================================
+    // 15. INICIAR DASHBOARD
+    // =================================================
+
+    (async () => {
 
         try {
 
             await view.when();
-            await webmap.loadAll();
 
-            capaCuencas = webmap.allLayers.find(c =>
-                c.type === "feature" &&
-                (
-                    c.title === "Cuenca_N" ||
-                    (c.url && c.url.includes("/Cuenca_N/FeatureServer"))
+            await webmap.load();
+
+            // Identificar las cuatro capas existentes.
+
+            const nombres = [
+                "Cuenca_N",
+                "Cuenca_A",
+                "Drenaje_N",
+                "Drenaje_A"
+            ];
+
+            const capas = nombres.map(nombre =>
+
+                webmap.allLayers.find(capa =>
+
+                    capa.title?.trim() === nombre ||
+
+                    capa.url?.includes(
+                        "/" + nombre + "/FeatureServer"
+                    )
                 )
             );
 
+            console.log(
+                "Capas reconocidas:",
+                nombres.map(
+                    (nombre, i) => [
+                        nombre,
+                        !!capas[i]
+                    ]
+                )
+            );
+
+            // Primera capa: Cuenca_N,
+            // fuente de indicadores y gráficas.
+
+            capaCuencas = capas[0];
+
             if (!capaCuencas) {
-                estado("No se encontró la capa Cuenca_N en el Web Map.");
+
+                estado(
+                    "No se encontró Cuenca_N. " +
+                    "Verifica que guardaste el Web Map."
+                );
+
                 return;
             }
 
@@ -713,112 +1771,106 @@ require([
 
             capaCuencas.visible = true;
 
-            configurarPopup(capaCuencas);
-
-            // Volver a aplicar la plantilla al terminar
-            // la inicialización de la capa en la vista.
-            await view.whenLayerView(capaCuencas);
+            // Configurar alias.
 
             configurarPopup(capaCuencas);
+
+            // Cargar opciones de indicadores.
+
+            configurarSelectores();
+
+            // Consultar estadísticas generales.
 
             await cargarEstadisticas();
 
-           
-view.on("click", async (evento) => {
+            // Las otras capas se mantienen disponibles
+            // desde LayerList sin realizar cálculos
+            // adicionales en este dashboard.
 
-    try {
+            // =================================================
+            // 16. SELECCIÓN DE CUENCAS EN EL MAPA
+            // =================================================
 
-        const respuesta = await view.hitTest(evento, {
-            include: [capaCuencas]
-        });
+            view.on("click", async evento => {
 
-        const encontrado = respuesta.results.find(r =>
-            r.graphic &&
-            r.graphic.layer === capaCuencas
-        );
+                try {
 
-        if (!encontrado) return;
+                    const resultado =
+                        await view.hitTest(evento, {
 
-        const grafico = encontrado.graphic;
+                            include: [capaCuencas]
 
-        // Recuperar el ObjectID del polígono seleccionado.
-        const campoID = capaCuencas.objectIdField;
-        const objectId = grafico.attributes[campoID];
+                        });
 
-        if (objectId === undefined || objectId === null) {
-            estado("No se encontró el identificador del polígono.");
-            return;
-        }
+                    const grafico =
+                        resultado.results.find(
+                            item =>
+                                item.graphic?.layer ===
+                                capaCuencas
+                        )?.graphic;
 
-        estado("Consultando atributos de la cuenca...");
+                    const id =
+                        grafico?.attributes?.[
+                            capaCuencas.objectIdField
+                        ];
 
-        // Consultar todos los atributos desde el FeatureServer.
-        const consulta = capaCuencas.createQuery();
+                    if (
+                        id === undefined ||
+                        id === null
+                    ) {
+                        return;
+                    }
 
-        consulta.objectIds = [objectId];
-        consulta.outFields = ["*"];
-        consulta.returnGeometry = false;
+                    // Recuperar todos los atributos
+                    // directamente del FeatureServer.
 
-        const resultado = await capaCuencas.queryFeatures(consulta);
+                    const feature =
+                        await consultarUnaCuenca(
+                            id,
+                            false
+                        );
 
-        if (!resultado.features.length) {
-            estado("No se encontraron atributos de la cuenca.");
-            return;
-        }
+                    if (feature) {
 
-        const atributos = resultado.features[0].attributes;
+                        mostrarCuenca(
+                            feature.attributes
+                        );
+                    }
 
-        // Actualizar los indicadores y la gráfica de torta.
-        mostrarCuenca(atributos);
+                } catch (error) {
 
-        estado(
-            "Cuenca seleccionada: " +
-            (atributos.NMGCUENCA || objectId) +
-            ". Indicadores actualizados."
-        );
+                    console.error(
+                        "Selección:",
+                        error
+                    );
 
-    } catch (error) {
+                    estado(
+                        "No se pudo consultar " +
+                        "la cuenca seleccionada."
+                    );
+                }
+            });
 
-        console.error("Error al consultar cuenca:", error);
-
-        estado(
-            "Error al recuperar atributos: " +
-            (error.message || error)
-        );
-
-    }
-
-});
-
-            view.ui.add(
-                new Legend({ view: view }),
-                "bottom-right"
-            );
-
-            estado("Mapa y gráficos cargados correctamente.");
+            actualizarTema();
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                "Error ArcGIS:",
+                error
+            );
 
             estado(
-                "Error al cargar el dashboard: " +
+                "No se pudo cargar la capa: " +
                 (error.message || error)
             );
         }
-    }
 
-    $("btnInicio").addEventListener("click", () => {
-        view.goTo({
-            center: [-75.57, 6.25],
-            zoom: 11
-        });
-    });
-
-    iniciar();
+    })();
 
 });
 
 </script>
+
 </body>
 </html>
