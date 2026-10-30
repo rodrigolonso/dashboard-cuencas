@@ -175,7 +175,7 @@ function updateLayersVisible(state){if(!webmap)return;for(const{layer}of layersO
 function togglePanel(){const show=$('layerPanel').hidden;$('layerPanel').hidden=!show;$('toggleCapas').setAttribute('aria-expanded',show?'true':'false');}
 async function connect(){if(processing)return;processing=true;$('conectar').disabled=true;$('consultar').disabled=true;$('agregar').disabled=true;$('cuenca').disabled=true;$('filtrarCuencas').disabled=true;$('basemap').disabled=true;$('toggleCapas').disabled=true;$('limpiar').disabled=true;clearReports();status('Conectando a ArcGIS Online...');
  try{
- esriConfig.apiKey = $('apiKey').value.trim() || 'AAPTatZi4raxlt8bUV-_FiAHwIg..yr4s4Knk2CYKj44gSPKkL_C9zUlI-zmZ4J9sMmocD_LJrK2pgixt0hhiOI12_nxCbU6L4I-_z9_8Wq56fAegnp1wvcsL7w4dTlYHnQ1bEXnwfRz8E1m49pVaZRHZCFaRukemC2TimzPfUS3GHR2FKzSQDAsmt9OcXWKGowKzMlMw323ShI3L7NlVJxT16ngxDwwKo5xaM1uVrQyxDxDoklFzXIam7BDOYulqJBd3y7zpBH6AdP9M7d68hi3MxFMY6Ik400REbytglWfIHg..AT1_WZEvd0HH';
+ esriConfig.apiKey = $('apiKey').value.trim() || 'AAPTazYXS1Lf36QnQkeo3eqHFLA..WSe4rYvsUwNrOn4jjVsu-S26DkxYQm5LNXh_v5bZch8FHu1eNXIr6l680Z1lpCUIbmZqoWv5vWcPAcNgqqgUc5kF3QvORFjqxyBFRQ1hA-D8AdGm2LohbTEOeSRq0SmQ0blAOtBirr7RqWt7klyRwjgL-K_TgiCG5cWhhPw_KsH7Vo5d6J3_9KCjVerO_L9lJGWLAs_JR0bXT5moP4TZAmrnMTWxuN4tIhlCl1_newE1NJjNropdIMYgXPIzDBrk4TJuYrK9nuUkAT1_WvyQbsBp';
  if(view){view.destroy();view=null;}
  webmap=new WebMap({portalItem:{id:MAP_ID,portal:{url:'https://www.arcgis.com'}}});await webmap.load();await webmap.loadAll();
  const layers=flatten(webmap).map(x=>x.layer);console.info('Capas encontradas:',layers.map(l=>({titulo:l.title,tipo:l.type,campos:l.fields?.map(f=>f.name)})));
