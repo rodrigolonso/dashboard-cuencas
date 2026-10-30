@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planes Maestros | Dashboard Social</title>
+<link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
+<style>
+:root{--navy:#1c4056;--blue:#276c91;--light:#edf4f7;--border:#d9e3e9;--ink:#263946;--muted:#617684}
+*{box-sizing:border-box}body{margin:0;font:14px "Segoe UI",Arial,sans-serif;color:var(--ink);background:#f5f8fa}
+header{background:var(--navy);color:white;padding:14px 21px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+header h1{margin:0;font-size:19px;font-weight:600}header small{display:block;color:#d8e8f0;margin-top:4px}header .subtitle{color:#d8e8f0;font-size:12px}
+.toolbar{display:flex;align-items:end;gap:9px;flex-wrap:wrap;padding:12px 16px;background:white;border-bottom:1px solid var(--border)}
+.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:12px;color:#566e7c}
+input,select,button{font:inherit;border:1px solid #c8d7df;border-radius:5px;padding:9px 10px;min-height:36px}
+input[type=search]{width:220px;min-width:170px}select{max-width:100%}#cuenca{width:330px;max-width:calc(100vw - 40px)}
+button{background:var(--blue);border-color:var(--blue);color:white;cursor:pointer;white-space:nowrap}button:hover{filter:brightness(.94)}button:disabled{opacity:.5;cursor:default}.ghost{background:white;color:var(--blue);border-color:#bfd2df}.secondary{background:#edf5fa;color:var(--blue);border-color:#c6dce7}.smallbtn{padding:6px 9px;min-height:28px;font-size:12px}
+#selectionBar{padding:8px 16px;background:white;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-height:45px}
+.selectionlabel{font-size:12px;color:var(--muted)}.chip{border:1px solid #c8d9e4;border-radius:18px;padding:5px 7px 5px 10px;color:#1d5675;background:#eff6fa;display:inline-flex;align-items:center;gap:7px;max-width:340px}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chip button{border:0;border-radius:20px;padding:0 5px;min-height:23px;background:transparent;color:#315b76;font-size:18px;line-height:1}
+#status{padding:9px 16px;background:#eaf3f8;color:#28556e;min-height:37px;font-size:13px;border-bottom:1px solid var(--border)}#status.alert{background:#fff1ee;color:#9e392c}
+.layout{display:grid;grid-template-columns:minmax(320px,1.15fr) minmax(420px,1fr);gap:12px;padding:12px;height:calc(100vh - 245px);min-height:590px}
+.mapbox,.panel{background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden;min-height:0}
+.mapbox{position:relative}#viewDiv{height:100%;width:100%;min-height:460px}.map-tools{position:absolute;top:14px;right:14px;z-index:5;display:flex;gap:6px;align-items:start;flex-wrap:wrap;justify-content:end;max-width:95%;pointer-events:none}.map-tools>*{pointer-events:auto}.map-tools button{box-shadow:0 1px 5px #0002}
+#layerPanel{position:absolute;top:56px;right:14px;z-index:6;width:290px;max-width:calc(100% - 28px);max-height:min(68vh,520px);background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 3px 15px #142b3f30;overflow:auto;padding:13px}
+#layerPanel[hidden]{display:none}#layerPanel h3{font-size:14px;margin:2px 0 9px}.layerrow{display:flex;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid #edf1f3;font-size:13px}.layerrow input{min-height:auto;accent-color:#24658b}.groupLayer{font-weight:600}
+.map-tools select{background:#fff;min-width:150px;box-shadow:0 1px 5px #0002;max-width:230px}.layer-actions{display:flex;gap:7px;margin:11px 0}.layer-actions button{flex:1}
+.panel{padding:15px;overflow:auto}h2{margin:4px 0 10px;font-size:17px;color:var(--navy)}.muted{color:var(--muted);font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}.stat{background:var(--light);padding:12px;border-radius:7px}.stat span{display:block;color:#577080;font-size:12px}.stat strong{display:block;color:var(--navy);font-size:19px;margin-top:5px;overflow-wrap:anywhere}
+.summary{margin:12px 0}.result{margin:12px 0;border:1px solid var(--border);border-radius:7px;overflow:hidden}.result>summary{background:#edf4f7;cursor:pointer;padding:12px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:5px;list-style:auto}.result>summary:hover{background:#e4eff5}.result>summary strong{font-size:14px}.result>.resultbody{padding:11px}
+.resultstats{margin-bottom:9px;font-size:12px;color:#4b6777}.resultstats strong{color:#173f5c}section{margin:14px 0 19px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px}.section-head h3{font-size:14px;margin:0}.count{font-size:12px;color:#587484}
+.tablewrap{max-height:225px;overflow:auto;border:1px solid var(--border);border-radius:6px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:8px;border-bottom:1px solid #e7edf1;white-space:nowrap}th{position:sticky;top:0;background:#f0f5f8;z-index:1}th.num,td.num{text-align:right}.summarytable{max-height:175px}
+.info{font-size:12px;color:#506977;background:#f3f7f9;border-radius:6px;padding:10px;line-height:1.5;margin-top:10px}
+footer{padding:4px 15px;color:#76858e;font-size:11px}#apiKey{width:210px}.technical{margin-left:auto}
+@media(max-width:1000px){.layout{grid-template-columns:1fr;height:auto}.mapbox{height:55vh;min-height:420px}.panel{min-height:400px;max-height:none;overflow:visible}#viewDiv{min-height:420px}.technical{margin-left:0}}
+@media(max-width:560px){#cuenca{width:100%}.field{width:100%}input[type=search]{width:100%}.map-tools{top:10px;right:10px}.map-tools select{max-width:160px}.toolbar button{flex:1}header h1{font-size:17px}}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>Planes Maestros · Dashboard Social</h1><small>Consulta territorial por cuenca hidrográfica | Medellín y área de estudio</small></div>
+ <div class="subtitle">Web Map Social · ArcGIS Online</div>
+</header>
+<div class="toolbar">
+ <div class="field"><label for="filtrarCuencas">Filtrar por nombre o FID_R</label><input id="filtrarCuencas" type="search" placeholder="Buscar cuenca..." disabled></div>
+ <div class="field"><label for="cuenca">Seleccionar cuenca (identificada por FID_R)</label><select id="cuenca" disabled><option>Cargando cuencas...</option></select></div>
+ <button id="agregar" class="secondary" disabled>+ Añadir cuenca</button>
+ <button id="consultar" disabled>Consultar selección</button>
+ <button id="exportarXLSX" class="ghost" disabled title="Descarga un Excel con áreas numéricas reales para sumar">Descargar Excel (.xlsx)</button>
+ <button id="exportar" class="ghost" disabled title="CSV con números sin separadores de miles y coma decimal">Descargar tabla CSV</button>
+ <button id="capturaPNG" class="ghost" disabled title="Encuadra todas las cuencas y captura el mapa y todas las tablas">Descargar captura PNG</button>
+ <button id="exportarPDF" class="ghost" disabled title="Genera un PDF con mapa encuadrado en todas las cuencas y tablas completas">Exportar reporte PDF</button>
+ <button id="limpiar" class="ghost" disabled>Limpiar</button>
+ <details class="technical"><summary style="cursor:pointer;font-size:12px;color:#536978">Conexión / API Key (opcional)</summary><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px"><input id="apiKey" type="password" aria-label="API Key opcional" placeholder="API Key (si se requiere)"><button id="conectar" class="smallbtn secondary">Reconectar</button></div></details>
+</div>
+<div id="selectionBar" aria-live="polite"><span class="selectionlabel">Cuencas agregadas:</span><span id="chips" class="muted">Ninguna. Seleccione una cuenca y pulse «Añadir cuenca», o consulte una directamente.</span></div>
+<div id="status" role="status">Iniciando aplicación...</div>
+<div class="layout">
+ <div class="mapbox">
+  <div id="viewDiv"></div>
+  <div class="map-tools">
+   <select id="basemap" aria-label="Seleccionar mapa base" title="Seleccionar mapa base" disabled>
+    <option value="original">Mapa base original</option><option value="topo-vector">Topográfico</option><option value="streets-vector">Calles</option>
+    <option value="satellite">Imagen satelital</option><option value="hybrid">Satelital con etiquetas</option>
+    <option value="gray-vector">Gris claro</option><option value="dark-gray-vector">Gris oscuro</option><option value="osm">OpenStreetMap</option>
+   </select>
+   <button id="toggleCapas" class="ghost" aria-expanded="false" disabled>☷ Capas</button>
+  </div>
+  <div id="layerPanel" hidden>
+    <h3>Visibilidad de capas</h3>
+    <div id="layerOptions" class="muted">Conectando...</div>
+    <div class="layer-actions"><button id="capasTodas" class="smallbtn secondary">Activar todas</button><button id="capasNinguna" class="smallbtn ghost">Desactivar todas</button></div>
+    <div class="muted">Las capas pueden tener permisos de acceso y escalas de visibilidad. Los resultados del análisis no dependen de que una capa esté visible.</div>
+  </div>
+ </div>
+ <div class="panel">
+  <h2 id="encabezado">Seleccione una o varias cuencas</h2>
+  <div class="stats">
+   <div class="stat"><span>Cuencas consultadas</span><strong id="cuencasTotal">—</strong></div>
+   <div class="stat"><span>Suma de áreas de cuencas (m²)</span><strong id="areaTotal">—</strong></div>
+   <div class="stat"><span>Municipios identificados (por cuenca)</span><strong id="municipiosTotal">—</strong></div>
+   <div class="stat"><span>Registros territoriales consultados</span><strong id="registrosTotal">—</strong></div>
+  </div>
+  <div id="tablas"><p class="muted">Seleccione una cuenca y pulse «Consultar selección»; para varias, primero añádalas a la lista.</p></div>
+  <div class="info">Las superficies se presentan en metros cuadrados (m²). El «área dentro de la cuenca» es el área de la intersección geométrica entre la unidad territorial y cada cuenca; no es necesariamente su área total. Los registros repetidos de una misma unidad se unen geométricamente para evitar doble conteo cuando el procesamiento es posible. Las cuencas homónimas se diferencian por <code>FID_R</code>. En consultas múltiples, la suma de áreas de cuencas no representa el área de su unión si se superponen.</div>
+ </div>
+</div>
+<footer>Web Map Social: 9426dc89357e4950acab7819794e9f62 · Requiere Internet y autorización de ArcGIS Online si las capas son privadas. Excel numérico (.xlsx) y CSV con coma decimal.</footer>
+<script src="https://js.arcgis.com/4.32/"></script>
+<script>
+require([
+ 'esri/config','esri/WebMap','esri/views/MapView','esri/Graphic','esri/layers/GraphicsLayer','esri/geometry/geometryEngine'
+],function(esriConfig,WebMap,MapView,Graphic,GraphicsLayer,geometryEngine){
+'use strict';
+const MAP_ID='9426dc89357e4950acab7819794e9f62';
+const $=id=>document.getElementById(id);
+const nf=new Intl.NumberFormat('es-CO',{minimumFractionDigits:2,maximumFractionDigits:2});
+let webmap=null,view=null,cuencasLayer=null,territoryLayer=null,overlay=null,originalBasemap=null;
+let cuencas=[],fields={},reportes=[],layersOfMap=[],processing=false;
+const selection=new Map();
+const normalize=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toUpperCase();
+const field=(layer,...names)=>{const ff=layer?.fields||[];for(const n of names){const f=ff.find(x=>normalize(x.name)===normalize(n));if(f)return f.name;}return null;};
+const valid=v=>v!==null&&v!==undefined&&String(v).trim()!==''&&!/^(SIN NOMBRE|SIN INFORMACION|NO APLICA|NULL|N\/A|SN\d*)$/i.test(String(v).trim());
+const clean=v=>valid(v)?String(v).trim():'';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const value=(a,n)=>n?a[n]:null;
+const sum=items=>items.reduce((t,n)=>t+n,0);
+function status(message,isError=false){$('status').textContent=message;$('status').className=isError?'alert':'';}
+function flatten(map){const out=[];const walk=(layer,level)=>{out.push({layer,level});if(layer.type==='group'&&layer.layers)layer.layers.forEach(l=>walk(l,level+1));};map.layers.forEach(l=>walk(l,0));return out;}
+function findLayer(layers,required,hints){const matches=layers.filter(l=>l.type==='feature'&&required.every(n=>field(l,n)));matches.sort((a,b)=>Number(hints.some(h=>normalize(b.title||'').includes(normalize(h))))-Number(hints.some(h=>normalize(a.title||'').includes(normalize(h)))));return matches[0]||null;}
+function whereId(layer,id){const f=field(layer,'FID_R');if(!f)throw Error('La capa '+(layer.title||'')+' no dispone de FID_R.');const type=layer.fields.find(x=>x.name===f)?.type||'';const numeric=/integer|double|small-integer|single|long|oid/i.test(type)&&/^-?\d+(\.\d+)?$/.test(String(id));return f+' = '+(numeric?Number(id):"'"+String(id).replace(/'/g,"''")+"'");}
+async function fetchFeatures(layer,where,geometry=false,outFields=['*']){
+ const idsQuery=layer.createQuery();idsQuery.where=where;const ids=await layer.queryObjectIds(idsQuery);if(!ids||!ids.length)return [];
+ const out=[];for(let i=0;i<ids.length;i+=150){const q=layer.createQuery();q.objectIds=ids.slice(i,i+150);q.outFields=outFields;q.returnGeometry=geometry;
+  if(geometry)q.outSpatialReference={wkid:3857};const result=await layer.queryFeatures(q);out.push(...result.features);
+ }return out;
+}
+function areaM2(g){if(!g||g.type!=='polygon')return 0;try{
+ const sr=g.spatialReference;const area=sr?.isWebMercator||sr?.isGeographic?geometryEngine.geodesicArea(g,'square-meters'):geometryEngine.planarArea(g,'square-meters');
+ return Number.isFinite(area)?Math.abs(area):0;
+ }catch(e){console.warn('No se calculó área:',e);return 0;}}
+function unionGeoms(geoms){const validGeoms=geoms.filter(Boolean);if(!validGeoms.length)return null;if(validGeoms.length===1)return validGeoms[0];return geometryEngine.union(validGeoms);}
+function combineAreas(geoms){if(geoms.length===1)return{area:areaM2(geoms[0]),estimated:false};try{const geom=unionGeoms(geoms);if(!geom)throw Error('Unión nula');return{area:areaM2(geom),estimated:false};}catch(e){console.warn('No se pudo disolver geometría para evitar solapes:',e);return{area:sum(geoms.map(areaM2)),estimated:true};}}
+function aggregate(features,basinGeom){
+ const groups={Municipios:new Map(),Comunas:new Map(),Barrios:new Map(),Veredas:new Map()};let sinInterseccion=0;
+ for(const f of features){if(!f.geometry){sinInterseccion++;continue;}let part=null;try{part=geometryEngine.intersect(f.geometry,basinGeom);}catch(e){console.warn('Error de intersección',e);sinInterseccion++;continue;}if(!part||part.type!=='polygon'||areaM2(part)<=0){sinInterseccion++;continue;}
+  const a=f.attributes||{};const mpio=clean(value(a,fields.municipio));const comuna=clean(value(a,fields.comuna));const barrio=clean(value(a,fields.barrio));const vereda=clean(value(a,fields.vereda));const cb=clean(value(a,fields.codB));const cv=clean(value(a,fields.codV));
+  const entries=[['Municipios',mpio,mpio],['Comunas',comuna,mpio+'|'+comuna],['Barrios',barrio,mpio+'|'+(cb||barrio)],['Veredas',vereda,mpio+'|'+(cv||vereda)]];
+  for(const [kind,name,key]of entries){if(!name)continue;let rec=groups[kind].get(key);if(!rec){rec={nombre:name,municipio:mpio,area:0,estimated:false,geomParts:[],nRegistros:0};groups[kind].set(key,rec);}rec.geomParts.push(part);rec.nRegistros++;}
+ }
+ let estimatedCount=0;for(const g of Object.values(groups))for(const rec of g.values()){const r=combineAreas(rec.geomParts);rec.area=r.area;rec.estimated=r.estimated;if(r.estimated)estimatedCount++;delete rec.geomParts;}
+ return{groups,sinInterseccion,estimatedCount};
+}
+function displayOptions(text=''){
+ const search=normalize(text),current=$('cuenca').value;
+ const matching=cuencas.filter(c=>normalize(c.nombre+' '+c.id).includes(search));
+ $('cuenca').innerHTML='<option value="">'+(matching.length?'Seleccione una cuenca...':'Sin coincidencias')+'</option>'+matching.map(c=>`<option value="${esc(c.id)}">${esc(c.nombre)} — FID_R ${esc(c.id)}</option>`).join('');
+ if(matching.some(c=>String(c.id)===current))$('cuenca').value=current;
+}
+function clearReports(){reportes=[];for(const id of ['exportar','exportarXLSX','capturaPNG','exportarPDF'])$(id).disabled=true;$('encabezado').textContent='Seleccione una o varias cuencas';for(const id of ['cuencasTotal','areaTotal','municipiosTotal','registrosTotal'])$(id).textContent='—';$('tablas').innerHTML='<p class="muted">Pulse «Consultar selección» para calcular las superficies de las cuencas agregadas.</p>';if(overlay)overlay.removeAll();}
+function renderChips(){const chips=$('chips');chips.innerHTML='';if(!selection.size){chips.textContent='Ninguna. Seleccione una cuenca y pulse «Añadir cuenca», o consulte una directamente.';return;}
+ for(const c of selection.values()){const el=document.createElement('div');el.className='chip';const span=document.createElement('span');span.textContent=c.nombre+' · '+c.id;span.title='FID_R '+c.id;const close=document.createElement('button');close.type='button';close.title='Retirar cuenca';close.setAttribute('aria-label','Retirar '+c.nombre+' '+c.id);close.textContent='×';close.addEventListener('click',()=>{if(processing)return;selection.delete(String(c.id));renderChips();clearReports();status('Selección actualizada. Consulte de nuevo para actualizar las tablas.');});el.append(span,close);chips.appendChild(el);}
+}
+function addSelection(){if(processing)return;const id=$('cuenca').value;if(!id){status('Seleccione una cuenca del listado.',true);return;}const c=cuencas.find(x=>String(x.id)===id);if(!c){status('La cuenca no se encontró en el listado.',true);return;}if(!selection.has(id)){selection.set(id,c);clearReports();renderChips();}status(selection.size+' cuenca(s) seleccionada(s). Puede añadir más o consultar ahora.');}
+function resetSelection(){if(processing)return;selection.clear();renderChips();clearReports();$('cuenca').value='';$('filtrarCuencas').value='';displayOptions();status('Selección y resultados limpiados.');}
+function tableFor(kind,group,basinArea){const rows=[...group.values()].sort((a,b)=>b.area-a.area);let s=`<section><div class="section-head"><h3>${kind}</h3><span class="count">${rows.length} unidades</span></div><div class="tablewrap"><table><thead><tr><th>Nombre</th><th>Municipio</th><th class="num">Área dentro de cuenca (m²)</th><th class="num">% cuenca</th></tr></thead><tbody>`;
+ for(const r of rows)s+=`<tr><td>${esc(r.nombre)}${r.estimated?' *':''}</td><td>${esc(r.municipio)}</td><td class="num">${nf.format(r.area)}</td><td class="num">${nf.format(basinArea?100*r.area/basinArea:0)}%</td></tr>`;
+ if(!rows.length)s+='<tr><td colspan="4">Sin unidades identificadas para esta categoría</td></tr>';return s+'</tbody></table></div></section>';
+}
+function renderReports(){
+ for(const id of ['exportar','exportarXLSX','capturaPNG','exportarPDF'])$(id).disabled=!reportes.length||processing;$('encabezado').textContent=reportes.length===1?'Resultado de la consulta':'Resultados de '+reportes.length+' cuencas';
+ $('cuencasTotal').textContent=String(reportes.length);$('areaTotal').textContent=nf.format(sum(reportes.map(r=>r.area)));
+ $('municipiosTotal').textContent=String(sum(reportes.map(r=>r.data.groups.Municipios.size)));$('registrosTotal').textContent=String(sum(reportes.map(r=>r.nRecords)));
+ let html='';if(reportes.length>1){html='<div class="summary"><h3 style="font-size:14px">Resumen por cuenca</h3><div class="tablewrap summarytable"><table><thead><tr><th>Cuenca</th><th>FID_R</th><th class="num">Área (m²)</th><th class="num">Municipios</th><th class="num">Barrios</th><th class="num">Veredas</th></tr></thead><tbody>';
+  for(const r of reportes)html+=`<tr><td>${esc(r.nombre)}</td><td>${esc(r.id)}</td><td class="num">${nf.format(r.area)}</td><td class="num">${r.data.groups.Municipios.size}</td><td class="num">${r.data.groups.Barrios.size}</td><td class="num">${r.data.groups.Veredas.size}</td></tr>`;
+  html+='</tbody></table></div></div>';}
+ for(const r of reportes){html+=`<details class="result" open><summary><strong>${esc(r.nombre)} — FID_R ${esc(r.id)}</strong><span>Área de cuenca: ${nf.format(r.area)} m²</span></summary><div class="resultbody"><div class="resultstats">Municipios: <strong>${r.data.groups.Municipios.size}</strong> · Comunas: <strong>${r.data.groups.Comunas.size}</strong> · Barrios: <strong>${r.data.groups.Barrios.size}</strong> · Veredas: <strong>${r.data.groups.Veredas.size}</strong> · Registros consultados: ${r.nRecords}</div>`;
+  for(const[kind,group]of Object.entries(r.data.groups))html+=tableFor(kind,group,r.area);
+  if(r.data.estimatedCount)html+=`<div class="info">* ${r.data.estimatedCount} unidad(es) no pudieron disolverse; sus áreas son sumas provisionales que podrían contener solapes.</div>`;
+  if(r.data.sinInterseccion)html+=`<div class="muted">${r.data.sinInterseccion} registro(s) sin superficie de intersección positiva o calculable.</div>`;
+  html+='</div></details>';
+ }
+ $('tablas').innerHTML=html;
+}
+function renderLayerPanel(){layersOfMap=flatten(webmap);const host=$('layerOptions');host.innerHTML='';for(let i=0;i<layersOfMap.length;i++){
+ const{layer,level}=layersOfMap[i];if(!('visible'in layer))continue;
+ const row=document.createElement('label');row.className='layerrow'+(layer.type==='group'?' groupLayer':'');row.style.paddingLeft=(level*14+2)+'px';
+ const ch=document.createElement('input');ch.type='checkbox';ch.checked=layer.visible;ch.dataset.layerIndex=String(i);ch.addEventListener('change',()=>{layer.visible=ch.checked;});
+ const name=document.createElement('span');name.textContent=layer.title||layer.id||'Capa sin nombre';row.append(ch,name);host.append(row);
+ }
+ const row=document.createElement('label');row.className='layerrow';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=overlay?.visible!==false;
+ checkbox.addEventListener('change',()=>{if(overlay)overlay.visible=checkbox.checked;});const label=document.createElement('span');label.textContent='Resaltado de cuencas consultadas';row.append(checkbox,label);host.append(row);
+}
+function updateLayersVisible(state){if(!webmap)return;for(const{layer}of layersOfMap){if('visible'in layer)layer.visible=state;}document.querySelectorAll('#layerOptions input').forEach(c=>{c.checked=state;});if(overlay)overlay.visible=state;}
+function togglePanel(){const show=$('layerPanel').hidden;$('layerPanel').hidden=!show;$('toggleCapas').setAttribute('aria-expanded',show?'true':'false');}
+async function connect(){if(processing)return;processing=true;$('conectar').disabled=true;$('consultar').disabled=true;$('agregar').disabled=true;$('cuenca').disabled=true;$('filtrarCuencas').disabled=true;$('basemap').disabled=true;$('toggleCapas').disabled=true;$('limpiar').disabled=true;clearReports();status('Conectando a ArcGIS Online...');
+ try{
+ esriConfig.apiKey = $('apiKey').value.trim() || 'AAPTatZi4raxlt8bUV-_FiAHwIg..yr4s4Knk2CYKj44gSPKkL_C9zUlI-zmZ4J9sMmocD_LJrK2pgixt0hhiOI12_nxCbU6L4I-_z9_8Wq56fAegnp1wvcsL7w4dTlYHnQ1bEXnwfRz8E1m49pVaZRHZCFaRukemC2TimzPfUS3GHR2FKzSQDAsmt9OcXWKGowKzMlMw323ShI3L7NlVJxT16ngxDwwKo5xaM1uVrQyxDxDoklFzXIam7BDOYulqJBd3y7zpBH6AdP9M7d68hi3MxFMY6Ik400REbytglWfIHg..AT1_WZEvd0HH';
+ if(view){view.destroy();view=null;}
+ webmap=new WebMap({portalItem:{id:MAP_ID,portal:{url:'https://www.arcgis.com'}}});await webmap.load();await webmap.loadAll();
+ const layers=flatten(webmap).map(x=>x.layer);console.info('Capas encontradas:',layers.map(l=>({titulo:l.title,tipo:l.type,campos:l.fields?.map(f=>f.name)})));
+ cuencasLayer=findLayer(layers,['FID_R'],['Cuencas']);territoryLayer=findLayer(layers,['FID_R','BARRIO'],['Barrio_Vereda','BarrioVereda']);
+ if(cuencasLayer===territoryLayer){cuencasLayer=layers.find(l=>l!==territoryLayer&&l.type==='feature'&&field(l,'FID_R'))||null;}
+ if(!cuencasLayer||!territoryLayer)throw Error('No se encontraron las capas Cuencas y Barrio_Vereda con FID_R. Revise que estén incluidas en el Web Map y que tenga permisos.');
+ await Promise.all([cuencasLayer.load(),territoryLayer.load()]);
+ fields={id:field(territoryLayer,'FID_R'),nombre:field(territoryLayer,'NMGCUENCA','NOMCUENCA'),municipio:field(territoryLayer,'NOMB_MPIO','NOMBRE_MPIO','NOM_MPIO'),comuna:field(territoryLayer,'COMUNA'),barrio:field(territoryLayer,'BARRIO'),vereda:field(territoryLayer,'NOMBRE_VER','NOM_VER'),codB:field(territoryLayer,'CODIGO'),codV:field(territoryLayer,'CODIGO_VER')};
+ if(!fields.nombre)throw Error('Barrio_Vereda debe contener el campo NMGCUENCA.');if(!fields.municipio)console.warn('No se encontró NOMB_MPIO: revisar la capa.');
+ const features=await fetchFeatures(territoryLayer,'1=1',false,[fields.id,fields.nombre]);const unique=new Map();
+ for(const feat of features){const id=value(feat.attributes,fields.id);if(id==null)continue;const name=clean(value(feat.attributes,fields.nombre))||'Sin nombre';if(!unique.has(String(id)))unique.set(String(id),{id:String(id),nombre:name});}
+ cuencas=[...unique.values()].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')||a.id.localeCompare(b.id,'es'));
+ displayOptions();selection.clear();renderChips();originalBasemap=webmap.basemap;$('basemap').value='original';
+ overlay=new GraphicsLayer({title:'Cuencas consultadas',listMode:'hide'});webmap.add(overlay);
+ view=new MapView({container:'viewDiv',map:webmap,ui:{components:['zoom','attribution']}});await view.when();renderLayerPanel();
+ for(const id of ['cuenca','filtrarCuencas','basemap','toggleCapas','agregar','consultar','limpiar'])$(id).disabled=false;
+ status('Conectado. '+cuencas.length+' cuencas disponibles. Puede consultar una o añadir varias para una consulta conjunta.');
+ }catch(err){console.error(err);status('No se pudo conectar: '+(err.message||err)+'. Revise acceso a los servicios en ArcGIS Online.',true);}
+ finally{$('conectar').disabled=false;processing=false;}
+}
+async function consult(){if(processing)return;if(!selection.size){const id=$('cuenca').value;if(!id){status('Seleccione una cuenca o añada varias a la selección.',true);return;}addSelection();}if(!selection.size)return;
+ processing=true;$('consultar').disabled=true;$('agregar').disabled=true;$('limpiar').disabled=true;clearReports();const items=[...selection.values()];const colors=[[39,112,153],[196,118,46],[70,135,99],[144,94,150],[180,81,108],[49,141,158]];const geoms=[];
+ try{for(let i=0;i<items.length;i++){
+  const c=items[i];status('Consultando '+(i+1)+' de '+items.length+': '+c.nombre+' (FID_R '+c.id+'). Calculando áreas en m²...');
+  const basins=await fetchFeatures(cuencasLayer,whereId(cuencasLayer,c.id),true,['*']);if(!basins.length)throw Error('La cuenca FID_R '+c.id+' no tiene geometría en la capa Cuencas.');
+  const basinGeom=unionGeoms(basins.map(f=>f.geometry));if(!basinGeom)throw Error('No se pudo obtener geometría FID_R '+c.id);const basinArea=areaM2(basinGeom);if(!basinArea)throw Error('No fue posible calcular área de cuenca FID_R '+c.id+'.');
+  const records=await fetchFeatures(territoryLayer,whereId(territoryLayer,c.id),true,['*']);const data=aggregate(records,basinGeom);
+  reportes.push({id:c.id,nombre:c.nombre,area:basinArea,nRecords:records.length,data});geoms.push(basinGeom);
+  const color=colors[i%colors.length];overlay.add(new Graphic({geometry:basinGeom,attributes:{FID_R:c.id,NMGCUENCA:c.nombre},symbol:{type:'simple-fill',color:[...color,0.12],outline:{color:[...color,1],width:2.4}},popupTemplate:{title:'{NMGCUENCA}',content:'FID_R: {FID_R}'}}));
+  renderReports();
+ }
+ if(view&&geoms.length){await view.goTo(overlay.graphics.toArray(),{duration:700}).catch(e=>console.warn('No se pudo ajustar la vista:',e));}
+ const warnings=reportes.filter(r=>r.data.estimatedCount).length;
+ status('Consulta terminada: '+reportes.length+' cuenca(s) y '+sum(reportes.map(r=>r.nRecords))+' registros territoriales. '+(warnings?'Advertencia: revise áreas marcadas con * por posibles solapamientos.':'Puede descargar la tabla consolidada en CSV.'));
+ }catch(err){console.error(err);renderReports();status('Error al consultar: '+(err.message||err)+(reportes.length?' Se muestran los resultados obtenidos hasta el momento.':''),true);}
+ finally{processing=false;$('consultar').disabled=false;$('agregar').disabled=false;$('limpiar').disabled=false;for(const id of ['exportar','exportarXLSX','capturaPNG','exportarPDF'])$(id).disabled=!reportes.length;}
+}
+// Exportaciones: conservar números REALES, sin formato visual de miles.
+function allDetailRows(){
+ const rows=[];
+ for(const r of reportes){
+  let written=0;
+  for(const [kind,group] of Object.entries(r.data.groups))for(const unit of group.values()){
+   rows.push([r.id,r.nombre,r.area,kind,unit.nombre,unit.municipio,unit.area,
+     r.area?100*unit.area/r.area:0,unit.nRegistros,unit.estimated?'SÍ':'NO']);written++;
+  }
+  if(!written)rows.push([r.id,r.nombre,r.area,'','','',null,null,0,'']);
+ }
+ return rows;
+}
+const DETAIL_HEADERS=['FID_R','Cuenca','Área total cuenca (m²)','Categoría','Unidad territorial',
+ 'Municipio','Área dentro de la cuenca (m²)','Participación en cuenca (%)','Registros base','Área provisional'];
+function csvNumber(value){
+ if(typeof value!=='number'||!Number.isFinite(value))return '';
+ // Sin separador de miles. El formato 11116612,35 sí lo reconoce Excel en español.
+ return value.toFixed(2).replace('.',',');
+}
+function csvValue(value,index){
+ if(value===null||value===undefined)return '';
+ if(typeof value==='number'&&Number.isFinite(value)){
+  return [2,6,7].includes(index)?csvNumber(value):String(value);
+ }
+ // Evitar inyección de fórmulas al abrir CSV en Excel.
+ let str=String(value);
+ if(/^[=+@\-\t\r]/.test(str))str="'"+str;
+ return '"'+str.replace(/"/g,'""')+'"';
+}
+function downloadCSV(){
+ if(!reportes.length)return;
+ const rows=[DETAIL_HEADERS,...allDetailRows()];
+ // BOM para acentos; delimitador ; y coma decimal, sin miles ni valores numéricos entre comillas.
+ const csv='\ufeffsep=;\r\n'+rows.map(row=>row.map((v,i)=>csvValue(v,i)).join(';')).join('\r\n');
+ saveBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),'consulta_social_cuencas.csv');
+ status('CSV descargado: áreas y porcentajes como números con coma decimal, sin separador de miles.');
+}
+
+// ZIP básico de archivos sin compresión. Evita librerías de terceros para XLSX y PNG masivo.
+const ENCODER=new TextEncoder();
+function crc32(bytes){
+ let crc=0xFFFFFFFF;
+ for(const b of bytes){crc^=b;for(let k=0;k<8;k++)crc=(crc>>>1)^((crc&1)?0xEDB88320:0);}
+ return (crc^0xFFFFFFFF)>>>0;
+}
+function zipStore(entries){
+ const parts=[],central=[];let offset=0;
+ const now=new Date();const dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
+ const dosDate=((Math.max(1980,now.getFullYear())-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
+ for(const entry of entries){
+  const filename=ENCODER.encode(entry.name);
+  const payload=typeof entry.data==='string'?ENCODER.encode(entry.data):entry.data;
+  const len=payload.length,crc=crc32(payload);
+  const local=new Uint8Array(30+filename.length),v=new DataView(local.buffer);
+  v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x0800,true);
+  v.setUint16(8,0,true);v.setUint16(10,dosTime,true);v.setUint16(12,dosDate,true);
+  v.setUint32(14,crc,true);v.setUint32(18,len,true);v.setUint32(22,len,true);
+  v.setUint16(26,filename.length,true);local.set(filename,30);
+  parts.push(local,payload);
+  const dir=new Uint8Array(46+filename.length),c=new DataView(dir.buffer);
+  c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);
+  c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,dosTime,true);
+  c.setUint16(14,dosDate,true);c.setUint32(16,crc,true);c.setUint32(20,len,true);
+  c.setUint32(24,len,true);c.setUint16(28,filename.length,true);c.setUint32(42,offset,true);
+  dir.set(filename,46);central.push(dir);offset+=local.length+len;
+ }
+ const directorySize=central.reduce((n,x)=>n+x.length,0);
+ const end=new Uint8Array(22),z=new DataView(end.buffer);
+ z.setUint32(0,0x06054b50,true);z.setUint16(8,entries.length,true);
+ z.setUint16(10,entries.length,true);z.setUint32(12,directorySize,true);z.setUint32(16,offset,true);
+ return new Blob([...parts,...central,end],{type:'application/zip'});
+}
+function xmlEscape(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));}
+function colLabel(i){let x=i+1,s='';while(x){x--;s=String.fromCharCode(65+x%26)+s;x=Math.floor(x/26);}return s;}
+function xmlSheet(rows,decCols,intCols){
+ const dec=new Set(decCols),ints=new Set(intCols);
+ let out='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+ '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+ '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+
+ '<sheetFormatPr defaultRowHeight="16"/><sheetData>';
+ rows.forEach((row,ri)=>{
+  out+='<row r="'+(ri+1)+'">';
+  row.forEach((v,ci)=>{
+   if(v===null||v===undefined||v==='')return;
+   const ref=colLabel(ci)+(ri+1);let type='inlineStr',body='',style=ri===0?' s="3"':'';
+   if(ri>0&&typeof v==='number'&&Number.isFinite(v)){
+    type='n';style=dec.has(ci)?' s="1"':(ints.has(ci)?' s="2"':'');body='<v>'+String(v)+'</v>';
+   }else{body='<is><t xml:space="preserve">'+xmlEscape(v)+'</t></is>';}
+   out+='<c r="'+ref+'" t="'+type+'"'+style+'>'+body+'</c>';
+  });out+='</row>';
+ });
+ out+='</sheetData><autoFilter ref="A1:'+colLabel(rows[0].length-1)+rows.length+'"/>';
+ out+='</worksheet>';return out;
+}
+function downloadXLSX(){
+ if(!reportes.length)return;
+ try{
+  const details=[DETAIL_HEADERS,...allDetailRows()];
+  const summaries=[['FID_R','Cuenca','Área total cuenca (m²)','Municipios','Comunas','Barrios','Veredas','Registros base']];
+  for(const r of reportes)summaries.push([r.id,r.nombre,r.area,
+   r.data.groups.Municipios.size,r.data.groups.Comunas.size,r.data.groups.Barrios.size,
+   r.data.groups.Veredas.size,r.nRecords]);
+  const contentTypes='<?xml version="1.0" encoding="UTF-8"?>'+
+   '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+   '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+   '<Default Extension="xml" ContentType="application/xml"/>'+
+   '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+   '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'+
+   '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'+
+   '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>';
+  const rels='<?xml version="1.0" encoding="UTF-8"?>'+
+   '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+   '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+  const wb='<?xml version="1.0" encoding="UTF-8"?>'+
+   '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
+   '<sheets><sheet name="Detalle territorial" sheetId="1" r:id="rId1"/>'+ 
+   '<sheet name="Resumen cuencas" sheetId="2" r:id="rId2"/></sheets></workbook>';
+  const wbRels='<?xml version="1.0" encoding="UTF-8"?>'+
+   '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+   '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'+ 
+   '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'+ 
+   '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+   '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+   '<fonts count="2"><font><sz val="11"/><name val="Aptos"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Aptos"/></font></fonts>'+ 
+   '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1C4056"/><bgColor indexed="64"/></patternFill></fill></fills>'+ 
+   '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'+ 
+   '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+ 
+   '<cellXfs count="4">'+
+   '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+ 
+   '<xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'+ 
+   '<xf numFmtId="1" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'+ 
+   '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'+ 
+   '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  const zip=zipStore([
+   {name:'[Content_Types].xml',data:contentTypes},
+   {name:'_rels/.rels',data:rels},
+   {name:'xl/workbook.xml',data:wb},
+   {name:'xl/_rels/workbook.xml.rels',data:wbRels},
+   {name:'xl/styles.xml',data:styles},
+   {name:'xl/worksheets/sheet1.xml',data:xmlSheet(details,[2,6,7],[8])},
+   {name:'xl/worksheets/sheet2.xml',data:xmlSheet(summaries,[2],[3,4,5,6,7])}
+  ]);
+  saveBlob(new Blob([zip],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'consulta_social_cuencas.xlsx');
+  status('Excel descargado: áreas y porcentajes numéricos (sumables), con hojas Detalle territorial y Resumen cuencas.');
+ }catch(e){console.error(e);status('No se pudo crear el Excel: '+e.message,true);}
+}
+
+// PDF sin jsPDF: se construye directamente con imágenes JPEG de las páginas.
+// Así nunca falla por una biblioteca externa no cargada.
+function base64Bytes(data){const binary=atob(data);const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes;}
+function pdfFromCanvases(canvases){
+ const n=canvases.length,pageW=595.28,pageH=841.89,objects=[];
+ objects[1]=[ENCODER.encode('<< /Type /Catalog /Pages 2 0 R >>')];
+ const kids=canvases.map((_,i)=>(3+3*i)+' 0 R').join(' ');
+ objects[2]=[ENCODER.encode('<< /Type /Pages /Kids ['+kids+'] /Count '+n+' >>')];
+ canvases.forEach((canvas,i)=>{
+  const pg=3+3*i,img=pg+1,contents=pg+2;
+  const dataUrl=canvas.toDataURL('image/jpeg',0.86);
+  if(!dataUrl.startsWith('data:image/jpeg;base64,'))throw Error('Este navegador no pudo crear las páginas JPEG del PDF.');
+  const bytes=base64Bytes(dataUrl.slice(dataUrl.indexOf(',')+1));
+  objects[pg]=[ENCODER.encode('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pageW+' '+pageH+'] /Resources << /XObject << /Im1 '+img+' 0 R >> >> /Contents '+contents+' 0 R >>')];
+  objects[img]=[
+   ENCODER.encode('<< /Type /XObject /Subtype /Image /Width '+canvas.width+' /Height '+canvas.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+bytes.length+' >>\nstream\n'),
+   bytes,ENCODER.encode('\nendstream')
+  ];
+  const commands=ENCODER.encode('q\n'+pageW+' 0 0 '+pageH+' 0 0 cm\n/Im1 Do\nQ\n');
+  objects[contents]=[
+   ENCODER.encode('<< /Length '+commands.length+' >>\nstream\n'),commands,ENCODER.encode('endstream')
+  ];
+ });
+ let offset=0;const result=[],offsets=[0];
+ function put(part){result.push(part);offset+=part.length;}
+ put(ENCODER.encode('%PDF-1.4\n%PDFLOCAL\n'));
+ for(let id=1;id<objects.length;id++){
+  offsets[id]=offset;put(ENCODER.encode(id+' 0 obj\n'));
+  for(const part of objects[id])put(part);
+  put(ENCODER.encode('\nendobj\n'));
+ }
+ const xref=offset;
+ put(ENCODER.encode('xref\n0 '+objects.length+'\n0000000000 65535 f \n'));
+ for(let id=1;id<objects.length;id++)put(ENCODER.encode(String(offsets[id]).padStart(10,'0')+' 00000 n \n'));
+ put(ENCODER.encode('trailer\n<< /Size '+objects.length+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n'));
+ return new Blob(result,{type:'application/pdf'});
+}
+
+// Exportación reproducible: mapa ArcGIS + todas las tablas, sin recortes del panel.
+// ArcGIS takeScreenshot captura la cartografía; los demás elementos se dibujan
+// sobre páginas canvas para no depender de la posición del scroll ni del zoom del navegador.
+let exporting=false;
+function exportName(){
+ const stamp=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+ const key=reportes.length===1?'FID_R_'+reportes[0].id:reportes.length+'_cuencas';
+ return ('dashboard_social_'+key+'_'+stamp).replace(/[^a-zA-Z0-9_-]/g,'_');
+}
+function saveBlob(blob,filename){
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+function canvasBlob(canvas){
+ return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('No se pudo generar la imagen PNG.')),'image/png'));
+}
+function loadPicture(dataUrl){
+ return new Promise((resolve,reject)=>{
+  const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('No se pudo preparar la captura del mapa.'));img.src=dataUrl;
+ });
+}
+// La exportación siempre encuadra la extensión COMPLETA de las cuencas
+// consultadas, sin depender del zoom o del desplazamiento manual del usuario.
+// Se conserva la vista original del dashboard y se restaura al terminar.
+function extentForSelectedBasins(){
+ const graphics=overlay?.graphics?.toArray?.()||[];
+ let bounds=null;
+ for(const gr of graphics){
+  const e=gr?.geometry?.extent;
+  if(!e)continue;
+  bounds=bounds?bounds.union(e):e.clone();
+ }
+ if(!bounds)throw Error('No se encontró la geometría de las cuencas seleccionadas. Ejecute nuevamente la consulta.');
+ // 30% de margen en la envolvente, además del ajuste a la relación de aspecto
+ // que hace MapView.goTo. Esto impide recortar bordes y contornos de cuencas.
+ return bounds.expand(1.30);
+}
+async function waitMapForExport(){
+ // El encuadre termina antes de que todas las teselas se dibujen; esperar
+ // brevemente evita un mapa incompleto en el PDF o en la captura PNG.
+ for(let i=0;i<40&&view.updating;i++)await new Promise(resolve=>setTimeout(resolve,250));
+ // Permitir al renderizador dibujar al menos dos cuadros tras el cambio de vista.
+ await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+}
+async function screenshotMap(){
+ if(!view)throw Error('El mapa todavía no está disponible.');
+ await view.when();
+ const previousViewpoint=view.viewpoint?.clone?.()||null;
+ const previousOverlayVisible=overlay?.visible;
+ try{
+  const bounds=extentForSelectedBasins();
+  // Hacer visible el contorno de la selección solo durante la captura.
+  if(overlay)overlay.visible=true;
+  status('Encuadrando todas las cuencas seleccionadas para el reporte...');
+  await view.goTo(bounds,{animate:false});
+  await waitMapForExport();
+  const shot=await view.takeScreenshot({format:'png',width:1100,height:500});
+  if(!shot?.dataUrl)throw Error('ArcGIS no pudo capturar el mapa encuadrado.');
+  return await loadPicture(shot.dataUrl);
+ }finally{
+  // La exportación no altera el zoom elegido para seguir trabajando en pantalla.
+  if(overlay&&previousOverlayVisible!==undefined)overlay.visible=previousOverlayVisible;
+  if(previousViewpoint){
+   try{await view.goTo(previousViewpoint,{animate:false});}
+   catch(err){console.warn('No se pudo restaurar la vista anterior:',err);}
+  }
+ }
+}
+function buildExportPages(mapPicture){
+ const W=1200,H=1697,L=50,R=W-50,END=1597,pages=[];
+ let ctx,y,page;
+ const color={navy:'#1c4056',blue:'#276c91',pale:'#edf4f7',ink:'#263946',gray:'#607789',line:'#d9e3e9',white:'#ffffff'};
+ const date=new Intl.DateTimeFormat('es-CO',{dateStyle:'long',timeStyle:'short'}).format(new Date());
+ function txt(str,x,at,font='18px Segoe UI, Arial, sans-serif',col=color.ink,align='left'){
+  ctx.font=font;ctx.fillStyle=col;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillText(String(str??''),x,at);
+ }
+ function rect(x,at,w,h,fill,border){ctx.fillStyle=fill;ctx.fillRect(x,at,w,h);if(border){ctx.strokeStyle=border;ctx.lineWidth=1;ctx.strokeRect(x+.5,at+.5,w-1,h-1);}}
+ function newPage(){
+  page=document.createElement('canvas');page.width=W;page.height=H;ctx=page.getContext('2d');
+  rect(0,0,W,H,color.white);rect(0,0,W,104,color.navy);
+  txt('PLANES MAESTROS  /  COMPONENTE SOCIAL',L,45,'bold 25px Segoe UI, Arial, sans-serif',color.white);
+  txt('Consulta territorial por cuencas hidrográficas',L,80,'19px Segoe UI, Arial, sans-serif','#dbe9f1');
+  ctx.strokeStyle=color.line;ctx.beginPath();ctx.moveTo(L,END+20);ctx.lineTo(R,END+20);ctx.stroke();
+  txt('Fuente: Web Map Social · ArcGIS Online · Superficies en metros cuadrados (m²)',L,END+44,'14px Segoe UI, Arial, sans-serif',color.gray);
+  pages.push(page);y=140;
+ }
+ function room(needed){if(y+needed>END)newPage();}
+ function wrap(str,maxWidth,font='17px Segoe UI, Arial, sans-serif'){
+  ctx.font=font;const words=String(str??'').trim().split(/\s+/).filter(Boolean);
+  if(!words.length)return [''];const lines=[];let line='';
+  for(const word of words){
+   const candidate=line?line+' '+word:word;
+   if(ctx.measureText(candidate).width<=maxWidth){line=candidate;continue;}
+   if(line){lines.push(line);line='';}
+   if(ctx.measureText(word).width<=maxWidth){line=word;continue;}
+   let segment='';for(const ch of word){if(ctx.measureText(segment+ch).width>maxWidth&&segment){lines.push(segment);segment='';}segment+=ch;}
+   line=segment;
+  }
+  if(line)lines.push(line);return lines;
+ }
+ function paragraph(str, font='17px Segoe UI, Arial, sans-serif',height=23){
+  const lines=wrap(str,R-L,font);for(const line of lines){room(height);txt(line,L,y+height-4,font,color.gray);y+=height;}return lines.length;
+ }
+ function label(str){room(45);txt(str,L,y+28,'bold 23px Segoe UI, Arial, sans-serif',color.navy);y+=44;}
+ function block(title,subtitle){room(94);rect(L,y,R-L,65,color.pale,color.line);txt(title,L+14,y+26,'bold 21px Segoe UI, Arial, sans-serif',color.navy);txt(subtitle,L+14,y+51,'16px Segoe UI, Arial, sans-serif',color.gray);y+=80;}
+ function tile(x,top,w,title,val){
+  rect(x,top,w,100,color.pale,color.line);
+  txt(title,x+16,top+33,'16px Segoe UI, Arial, sans-serif',color.gray);
+  let size=25;while(size>15){ctx.font='bold '+size+'px Segoe UI, Arial, sans-serif';if(ctx.measureText(String(val)).width<w-30)break;size--;}
+  txt(val,x+16,top+72,'bold '+size+'px Segoe UI, Arial, sans-serif',color.navy);
+ }
+ function tableHeading(){room(46);rect(L,y,R-L,40,color.navy);
+  txt('Unidad territorial',L+12,y+26,'bold 17px Segoe UI, Arial, sans-serif',color.white);
+  txt('Municipio',450,y+26,'bold 17px Segoe UI, Arial, sans-serif',color.white);
+  txt('Área dentro de cuenca (m²)',975,y+26,'bold 16px Segoe UI, Arial, sans-serif',color.white,'right');
+  txt('% cuenca',1138,y+26,'bold 16px Segoe UI, Arial, sans-serif',color.white,'right');
+  y+=40;
+ }
+ function tableRow(unit,index){
+  const name=String(unit.nombre??'')+(unit.estimated?' *':'');
+  const linesA=wrap(name,360),linesB=wrap(unit.municipio??'',250);
+  const height=Math.max(40,Math.max(linesA.length,linesB.length)*23+14);
+  return {height,draw(){
+   rect(L,y,R-L,height,index%2?'#f7f9fb':'#ffffff');
+   ctx.strokeStyle=color.line;ctx.beginPath();ctx.moveTo(L,y+height);ctx.lineTo(R,y+height);ctx.stroke();
+   linesA.forEach((s,i)=>txt(s,L+12,y+25+i*23));
+   linesB.forEach((s,i)=>txt(s,450,y+25+i*23));
+   txt(nf.format(unit.area),975,y+25,'18px Segoe UI, Arial, sans-serif',color.ink,'right');
+   txt(nf.format(basinArea?100*unit.area/basinArea:0)+'%',1138,y+25,'18px Segoe UI, Arial, sans-serif',color.ink,'right');
+   y+=height;
+  }};
+ }
+ let basinArea=0;
+ newPage();
+ label('REPORTE DE CONSULTA TERRITORIAL');
+ paragraph('Generado: '+date);
+ paragraph('Cuencas: '+reportes.map(r=>r.nombre+' (FID_R '+r.id+')').join(' · '));
+ y+=14;room(526);
+ rect(L,y,R-L,500,'#e6edf1',color.line);ctx.drawImage(mapPicture,L,y,R-L,500);y+=500;
+ txt('Mapa encuadrado automáticamente en todas las cuencas consultadas, con margen de seguridad.',L,y+21,'15px Segoe UI, Arial, sans-serif',color.gray);y+=44;
+ room(125);
+ const stats=[
+  ['Cuencas consultadas',String(reportes.length)],
+  ['Suma áreas de cuencas (m²)',nf.format(sum(reportes.map(r=>r.area)))],
+  ['Municipios identificados',String(sum(reportes.map(r=>r.data.groups.Municipios.size)))],
+  ['Registros territoriales',String(sum(reportes.map(r=>r.nRecords)))]
+ ];
+ const gap=10,tileWidth=(R-L-gap*3)/4;
+ stats.forEach((v,i)=>tile(L+i*(tileWidth+gap),y,tileWidth,v[0],v[1]));y+=124;
+ paragraph('Los resultados siguientes incluyen todas las unidades de las cuencas consultadas, incluso si las tablas del dashboard requieren desplazamiento vertical.');
+ y+=13;
+ for(const r of reportes){
+  basinArea=r.area;
+  block(r.nombre+'  ·  FID_R '+r.id, 'Área de cuenca: '+nf.format(r.area)+' m²  ·  '+r.nRecords+' registros territoriales');
+  paragraph('Municipios: '+r.data.groups.Municipios.size+'  ·  Comunas: '+r.data.groups.Comunas.size+'  ·  Barrios: '+r.data.groups.Barrios.size+'  ·  Veredas: '+r.data.groups.Veredas.size,'17px Segoe UI, Arial, sans-serif');
+  y+=11;
+  for(const [kind,group] of Object.entries(r.data.groups)){
+   const units=[...group.values()].sort((a,b)=>b.area-a.area);
+   // El título y encabezado de tabla se mantienen juntos si hay salto.
+   room(103);label(kind+'  ('+units.length+')');tableHeading();
+   if(!units.length){room(44);txt('Sin unidades identificadas en esta categoría',L+12,y+26,'17px Segoe UI, Arial, sans-serif',color.gray);y+=44;}
+   for(let i=0;i<units.length;i++){
+    let row=tableRow(units[i],i);
+    if(y+row.height>END){newPage();label(r.nombre+'  ·  FID_R '+r.id);label(kind+' (continuación)');tableHeading();row=tableRow(units[i],i);}
+    row.draw();
+   }
+   y+=15;
+  }
+  if(r.data.estimatedCount)paragraph('* Áreas provisionales: '+r.data.estimatedCount+' unidades no se pudieron disolver geométricamente; podrían contener solapes.');
+  if(r.data.sinInterseccion)paragraph('Registros sin intersección geométrica calculable: '+r.data.sinInterseccion+'.');
+  y+=16;
+ }
+ room(65);paragraph('Nota: el área dentro de cada cuenca corresponde a la intersección territorial y no necesariamente al área total de la unidad. La suma de cuencas no equivale al área de la unión si se superponen.');
+ paragraph('Créditos cartográficos: ArcGIS Online, Esri y proveedores indicados en el mapa base original.');
+ pages.forEach((canvas,i)=>{const cx=canvas.getContext('2d');cx.textAlign='right';cx.textBaseline='alphabetic';cx.fillStyle=color.gray;cx.font='15px Segoe UI, Arial, sans-serif';cx.fillText('Página '+(i+1)+' de '+pages.length,R,END+44);});
+ return pages;
+}
+async function exportReport(format){
+ if(exporting||processing)return;
+ if(!reportes.length){status('Primero realice una consulta de al menos una cuenca.',true);return;}
+ exporting=true;for(const id of ['capturaPNG','exportarPDF','exportar','exportarXLSX','consultar','agregar','limpiar'])$(id).disabled=true;
+ try{
+  status('Preparando el mapa y todas las tablas para exportación '+format.toUpperCase()+'...');
+  const screenshot=await screenshotMap();
+  const pages=buildExportPages(screenshot);const basename=exportName();
+  if(format==='pdf'){
+   saveBlob(pdfFromCanvases(pages),basename+'.pdf');
+   status('PDF descargado: '+pages.length+' página(s), con mapa y todas las tablas; sin bibliotecas externas.');
+  }else if(pages.length<=10){
+   // El PNG es panorámico e incluye el informe completo, no solo la porción visible del panel.
+   const combined=document.createElement('canvas');combined.width=1200;combined.height=1697*pages.length;
+   const cx=combined.getContext('2d');pages.forEach((p,i)=>cx.drawImage(p,0,1697*i));
+   saveBlob(await canvasBlob(combined),basename+'.png');status('Captura PNG completa descargada ('+pages.length+' sección(es) de página).');
+  }else{
+   const entries=[];
+   for(let i=0;i<pages.length;i++){
+    const data=new Uint8Array(await (await canvasBlob(pages[i])).arrayBuffer());
+    entries.push({name:'captura_'+String(i+1).padStart(3,'0')+'.png',data});
+   }
+   saveBlob(zipStore(entries),basename+'_PNG.zip');
+   status('Consulta extensa: se descargó ZIP con '+pages.length+' capturas PNG, sin omitir tablas.');
+  }
+ }catch(err){console.error('Error exportando reporte',err);status('No se pudo exportar el informe: '+(err.message||err),true);}
+ finally{exporting=false;for(const id of ['capturaPNG','exportarPDF','exportar','exportarXLSX'])$(id).disabled=!reportes.length;
+  for(const id of ['consultar','agregar','limpiar'])$(id).disabled=false;}
+}
+$('capturaPNG').addEventListener('click',()=>exportReport('png'));
+$('exportarPDF').addEventListener('click',()=>exportReport('pdf'));
+
+$('conectar').addEventListener('click',connect);$('consultar').addEventListener('click',consult);$('agregar').addEventListener('click',addSelection);$('limpiar').addEventListener('click',resetSelection);
+$('exportar').addEventListener('click',downloadCSV);$('exportarXLSX').addEventListener('click',downloadXLSX);$('filtrarCuencas').addEventListener('input',e=>displayOptions(e.target.value));
+$('toggleCapas').addEventListener('click',togglePanel);$('capasTodas').addEventListener('click',()=>updateLayersVisible(true));$('capasNinguna').addEventListener('click',()=>updateLayersVisible(false));
+$('basemap').addEventListener('change',e=>{if(!webmap)return;try{webmap.basemap=e.target.value==='original'?originalBasemap:e.target.value;status('Mapa base actualizado: '+e.target.options[e.target.selectedIndex].textContent+'.');}catch(err){console.error(err);status('No se pudo cambiar el mapa base: '+err.message,true);}});
+connect();
+});
+</script>
+</body>
+</html>
