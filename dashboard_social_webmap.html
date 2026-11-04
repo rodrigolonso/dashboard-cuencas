@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Planes Maestros | Dashboard Social</title>
+<title>Planes Maestros | Dashboard Social - Cuencas Divipola</title>
 <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
 <style>
 :root{--navy:#1c4056;--blue:#276c91;--light:#edf4f7;--border:#d9e3e9;--ink:#263946;--muted:#617684}
@@ -82,7 +82,7 @@ footer{padding:4px 15px;color:#76858e;font-size:11px}#apiKey{width:210px}.techni
    <div class="stat"><span>Registros territoriales consultados</span><strong id="registrosTotal">—</strong></div>
   </div>
   <div id="tablas"><p class="muted">Seleccione una cuenca y pulse «Consultar selección»; para varias, primero añádalas a la lista.</p></div>
-  <div class="info">Las superficies se presentan en metros cuadrados (m²). El «área dentro de la cuenca» es el área de la intersección geométrica entre la unidad territorial y cada cuenca; no es necesariamente su área total. Los registros repetidos de una misma unidad se unen geométricamente para evitar doble conteo cuando el procesamiento es posible. Las cuencas homónimas se diferencian por <code>FID_R</code>. En consultas múltiples, la suma de áreas de cuencas no representa el área de su unión si se superponen.</div>
+  <div class="info">Las superficies se presentan en metros cuadrados (m²) y se calculan geométricamente sobre la cuenca y Cuencas_Divipola. El «área dentro de la cuenca» es el área de la intersección geométrica entre la unidad territorial y cada cuenca; no es necesariamente su área total. Los registros repetidos de una misma unidad se unen geométricamente para evitar doble conteo cuando el procesamiento es posible. Las cuencas homónimas se diferencian por <code>FID_R</code>. En consultas múltiples, la suma de áreas de cuencas no representa el área de su unión si se superponen.</div>
  </div>
 </div>
 <footer>Web Map Social: 9426dc89357e4950acab7819794e9f62 · Requiere Internet y autorización de ArcGIS Online si las capas son privadas. Excel numérico (.xlsx) y CSV con coma decimal.</footer>
@@ -93,6 +93,9 @@ require([
 ],function(esriConfig,WebMap,MapView,Graphic,GraphicsLayer,geometryEngine){
 'use strict';
 const MAP_ID='9426dc89357e4950acab7819794e9f62';
+// Introduzca aquí SOLO una API Key de navegador con permisos y dominios limitados.
+// Si está vacía, puede suministrarla temporalmente desde el panel Conexión.
+const API_KEY_AUTORIZADA='AAPTaQFVfUT0Xs68E_4enLAfHrw..w-gEJI9BTH72xTeKv4yEbrZNqVpGnfPMwJLNCe1BdW8HbFC03rKVNU7LfBjJ8sdL_6p12rqeR5RFFTKwUM4ITsaTvwr09eHul6dHlj2ZEfhDrsPRNO20S4V3Pdiy5SCHf1gedgd3ZRgmNoguv8aLNbcvwkEZJa8lfC0zIAmgA9jbce8jywXNqM3Zg3si0iEFtnxCR3tGp8KC3UfVxHxyRa9z8EZXDA0rSvgahHfs5_7O1RX8pRpx4NXKWUBoEOLS5elIHknMgLKQFBI51g..AT1_WvyQbsBp';
 const $=id=>document.getElementById(id);
 const nf=new Intl.NumberFormat('es-CO',{minimumFractionDigits:2,maximumFractionDigits:2});
 let webmap=null,view=null,cuencasLayer=null,territoryLayer=null,overlay=null,originalBasemap=null;
@@ -107,7 +110,18 @@ const value=(a,n)=>n?a[n]:null;
 const sum=items=>items.reduce((t,n)=>t+n,0);
 function status(message,isError=false){$('status').textContent=message;$('status').className=isError?'alert':'';}
 function flatten(map){const out=[];const walk=(layer,level)=>{out.push({layer,level});if(layer.type==='group'&&layer.layers)layer.layers.forEach(l=>walk(l,level+1));};map.layers.forEach(l=>walk(l,0));return out;}
-function findLayer(layers,required,hints){const matches=layers.filter(l=>l.type==='feature'&&required.every(n=>field(l,n)));matches.sort((a,b)=>Number(hints.some(h=>normalize(b.title||'').includes(normalize(h))))-Number(hints.some(h=>normalize(a.title||'').includes(normalize(h)))));return matches[0]||null;}
+// Selección estricta por nombre: Cuencas_Divipola contiene los cruces territoriales,
+// mientras Cuencas contiene las geometrías y áreas completas de las cuencas.
+const VISIBLE_TITLES=['Cuencas','Cuencas_Divipola','Municipio','Barrios','Comunas','Veredas'];
+function namedFeature(layers,title){
+ const name=normalize(title);
+ const candidates=layers.filter(l=>l.type==='feature');
+ return candidates.find(l=>normalize(l.title||'')===name)
+  || candidates.find(l=>{const t=String(l.title||'').trim().toLocaleLowerCase('es');
+    const base=String(title).toLocaleLowerCase('es');
+    return t.startsWith(base+' (')||t.startsWith(base+' - ');})||null;
+}
+
 function whereId(layer,id){const f=field(layer,'FID_R');if(!f)throw Error('La capa '+(layer.title||'')+' no dispone de FID_R.');const type=layer.fields.find(x=>x.name===f)?.type||'';const numeric=/integer|double|small-integer|single|long|oid/i.test(type)&&/^-?\d+(\.\d+)?$/.test(String(id));return f+' = '+(numeric?Number(id):"'"+String(id).replace(/'/g,"''")+"'");}
 async function fetchFeatures(layer,where,geometry=false,outFields=['*']){
  const idsQuery=layer.createQuery();idsQuery.where=where;const ids=await layer.queryObjectIds(idsQuery);if(!ids||!ids.length)return [];
@@ -162,37 +176,97 @@ function renderReports(){
  }
  $('tablas').innerHTML=html;
 }
-function renderLayerPanel(){layersOfMap=flatten(webmap);const host=$('layerOptions');host.innerHTML='';for(let i=0;i<layersOfMap.length;i++){
- const{layer,level}=layersOfMap[i];if(!('visible'in layer))continue;
- const row=document.createElement('label');row.className='layerrow'+(layer.type==='group'?' groupLayer':'');row.style.paddingLeft=(level*14+2)+'px';
- const ch=document.createElement('input');ch.type='checkbox';ch.checked=layer.visible;ch.dataset.layerIndex=String(i);ch.addEventListener('change',()=>{layer.visible=ch.checked;});
- const name=document.createElement('span');name.textContent=layer.title||layer.id||'Capa sin nombre';row.append(ch,name);host.append(row);
+function renderLayerPanel(){
+ layersOfMap=flatten(webmap);
+ const host=$('layerOptions');host.innerHTML='';
+ for(const title of VISIBLE_TITLES){
+  const item=layersOfMap.find(x=>normalize(x.layer.title||'')===normalize(title));
+  const row=document.createElement('label');row.className='layerrow';
+  const ch=document.createElement('input');ch.type='checkbox';
+  const name=document.createElement('span');name.textContent=title;
+  if(item){
+   ch.checked=item.layer.visible;
+   ch.addEventListener('change',()=>{item.layer.visible=ch.checked;});
+  }else{
+   ch.disabled=true;name.textContent=title+' (no está en el Web Map)';
+   row.title='Incorpore esta capa al Web Map Social de ArcGIS Online';
+  }
+  row.append(ch,name);host.append(row);
  }
- const row=document.createElement('label');row.className='layerrow';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=overlay?.visible!==false;
- checkbox.addEventListener('change',()=>{if(overlay)overlay.visible=checkbox.checked;});const label=document.createElement('span');label.textContent='Resaltado de cuencas consultadas';row.append(checkbox,label);host.append(row);
+ const row=document.createElement('label');row.className='layerrow';
+ const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=overlay?.visible!==false;
+ checkbox.addEventListener('change',()=>{if(overlay)overlay.visible=checkbox.checked;});
+ const label=document.createElement('span');label.textContent='Resaltado de cuencas consultadas';row.append(checkbox,label);host.append(row);
 }
-function updateLayersVisible(state){if(!webmap)return;for(const{layer}of layersOfMap){if('visible'in layer)layer.visible=state;}document.querySelectorAll('#layerOptions input').forEach(c=>{c.checked=state;});if(overlay)overlay.visible=state;}
+function updateLayersVisible(state){
+ if(!webmap)return;
+ for(const title of VISIBLE_TITLES){
+  const item=layersOfMap.find(x=>normalize(x.layer.title||'')===normalize(title));
+  if(item)item.layer.visible=state;
+ }
+ if(overlay)overlay.visible=state;
+ renderLayerPanel();
+}
 function togglePanel(){const show=$('layerPanel').hidden;$('layerPanel').hidden=!show;$('toggleCapas').setAttribute('aria-expanded',show?'true':'false');}
 async function connect(){if(processing)return;processing=true;$('conectar').disabled=true;$('consultar').disabled=true;$('agregar').disabled=true;$('cuenca').disabled=true;$('filtrarCuencas').disabled=true;$('basemap').disabled=true;$('toggleCapas').disabled=true;$('limpiar').disabled=true;clearReports();status('Conectando a ArcGIS Online...');
  try{
- esriConfig.apiKey = $('apiKey').value.trim() || 'AAPTazYXS1Lf36QnQkeo3eqHFLA..WSe4rYvsUwNrOn4jjVsu-S26DkxYQm5LNXh_v5bZch8FHu1eNXIr6l680Z1lpCUIbmZqoWv5vWcPAcNgqqgUc5kF3QvORFjqxyBFRQ1hA-D8AdGm2LohbTEOeSRq0SmQ0blAOtBirr7RqWt7klyRwjgL-K_TgiCG5cWhhPw_KsH7Vo5d6J3_9KCjVerO_L9lJGWLAs_JR0bXT5moP4TZAmrnMTWxuN4tIhlCl1_newE1NJjNropdIMYgXPIzDBrk4TJuYrK9nuUkAT1_WvyQbsBp';
+ esriConfig.apiKey=$('apiKey').value.trim()||API_KEY_AUTORIZADA||undefined;
  if(view){view.destroy();view=null;}
  webmap=new WebMap({portalItem:{id:MAP_ID,portal:{url:'https://www.arcgis.com'}}});await webmap.load();await webmap.loadAll();
  const layers=flatten(webmap).map(x=>x.layer);console.info('Capas encontradas:',layers.map(l=>({titulo:l.title,tipo:l.type,campos:l.fields?.map(f=>f.name)})));
- cuencasLayer=findLayer(layers,['FID_R'],['Cuencas']);territoryLayer=findLayer(layers,['FID_R','BARRIO'],['Barrio_Vereda','BarrioVereda']);
- if(cuencasLayer===territoryLayer){cuencasLayer=layers.find(l=>l!==territoryLayer&&l.type==='feature'&&field(l,'FID_R'))||null;}
- if(!cuencasLayer||!territoryLayer)throw Error('No se encontraron las capas Cuencas y Barrio_Vereda con FID_R. Revise que estén incluidas en el Web Map y que tenga permisos.');
+ cuencasLayer=namedFeature(layers,'Cuencas');
+ territoryLayer=namedFeature(layers,'Cuencas_Divipola');
+ if(!cuencasLayer||!territoryLayer){
+  throw Error('El Web Map Social debe incluir las capas «Cuencas» y «Cuencas_Divipola». Capas encontradas: '+layers.map(l=>l.title).join(', '));
+ }
  await Promise.all([cuencasLayer.load(),territoryLayer.load()]);
- fields={id:field(territoryLayer,'FID_R'),nombre:field(territoryLayer,'NMGCUENCA','NOMCUENCA'),municipio:field(territoryLayer,'NOMB_MPIO','NOMBRE_MPIO','NOM_MPIO'),comuna:field(territoryLayer,'COMUNA'),barrio:field(territoryLayer,'BARRIO'),vereda:field(territoryLayer,'NOMBRE_VER','NOM_VER'),codB:field(territoryLayer,'CODIGO'),codV:field(territoryLayer,'CODIGO_VER')};
- if(!fields.nombre)throw Error('Barrio_Vereda debe contener el campo NMGCUENCA.');if(!fields.municipio)console.warn('No se encontró NOMB_MPIO: revisar la capa.');
- const features=await fetchFeatures(territoryLayer,'1=1',false,[fields.id,fields.nombre]);const unique=new Map();
- for(const feat of features){const id=value(feat.attributes,fields.id);if(id==null)continue;const name=clean(value(feat.attributes,fields.nombre))||'Sin nombre';if(!unique.has(String(id)))unique.set(String(id),{id:String(id),nombre:name});}
- cuencas=[...unique.values()].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')||a.id.localeCompare(b.id,'es'));
+ if(!field(cuencasLayer,'FID_R')||!field(territoryLayer,'FID_R')){
+  throw Error('Cuencas y Cuencas_Divipola deben contener el campo FID_R.');
+ }
+ fields={
+  id:field(territoryLayer,'FID_R'),
+  nombre:field(territoryLayer,'NMGCUENCA'),
+  municipio:field(territoryLayer,'MUNICIPIO'),
+  comuna:field(territoryLayer,'COMUNA'),
+  barrio:field(territoryLayer,'BARRIO'),
+  vereda:field(territoryLayer,'VEREDA'),
+  area:field(territoryLayer,'Shape_Area'),
+  capa:field(territoryLayer,'CAPA_R'),
+  codB:null,codV:null
+ };
+ for(const mandatory of ['nombre','municipio','comuna','barrio','vereda']){
+  if(!fields[mandatory])throw Error('Falta el campo '+({nombre:'NMGCUENCA',municipio:'MUNICIPIO',comuna:'COMUNA',barrio:'BARRIO',vereda:'VEREDA'}[mandatory])+' en Cuencas_Divipola.');
+ }
+ const basinIdField=field(cuencasLayer,'FID_R');
+ const basinNameField=field(cuencasLayer,'NMGCUENCA','NOMCUENCA','NOMBRE','NOM_CUENCA');
+ const basinAttributes=await fetchFeatures(cuencasLayer,'1=1',false,[basinIdField,...(basinNameField?[basinNameField]:[])]);
+ const unique=new Map();
+ for(const feat of basinAttributes){
+  const raw=value(feat.attributes,basinIdField);
+  if(raw===null||raw===undefined||String(raw).trim()==='')continue;
+  const id=String(raw).trim();const nombre=clean(value(feat.attributes,basinNameField))||'';
+  if(!unique.has(id))unique.set(id,{id,nombre});
+  else if(nombre&&!unique.get(id).nombre)unique.get(id).nombre=nombre;
+ }
+ if(!unique.size)throw Error('La capa Cuencas no devolvió ningún FID_R válido.');
+ // Los nombres pueden repetirse (por ejemplo La Sucia); la identidad siempre es FID_R.
+ // Si Cuencas no tiene nombre, completarlo desde Cuencas_Divipola.
+ if([...unique.values()].some(c=>!c.nombre)){
+  const names=await fetchFeatures(territoryLayer,fields.id+' IS NOT NULL',false,[fields.id,fields.nombre]);
+  for(const f of names){
+   const id=value(f.attributes,fields.id);const name=clean(value(f.attributes,fields.nombre));
+   if(id!==null&&id!==undefined&&name&&unique.has(String(id))&&!unique.get(String(id)).nombre){
+    unique.get(String(id)).nombre=name;
+   }
+  }
+ }
+ cuencas=[...unique.values()].map(c=>({...c,nombre:c.nombre||'Sin nombre registrado'}))
+   .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')||a.id.localeCompare(b.id,'es', {numeric:true}));
  displayOptions();selection.clear();renderChips();originalBasemap=webmap.basemap;$('basemap').value='original';
  overlay=new GraphicsLayer({title:'Cuencas consultadas',listMode:'hide'});webmap.add(overlay);
  view=new MapView({container:'viewDiv',map:webmap,ui:{components:['zoom','attribution']}});await view.when();renderLayerPanel();
  for(const id of ['cuenca','filtrarCuencas','basemap','toggleCapas','agregar','consultar','limpiar'])$(id).disabled=false;
- status('Conectado. '+cuencas.length+' cuencas disponibles. Puede consultar una o añadir varias para una consulta conjunta.');
+ status('Conectado. '+cuencas.length+' cuencas identificadas por FID_R en la capa Cuencas. Fuente territorial: Cuencas_Divipola.');
  }catch(err){console.error(err);status('No se pudo conectar: '+(err.message||err)+'. Revise acceso a los servicios en ArcGIS Online.',true);}
  finally{$('conectar').disabled=false;processing=false;}
 }
@@ -202,7 +276,9 @@ async function consult(){if(processing)return;if(!selection.size){const id=$('cu
   const c=items[i];status('Consultando '+(i+1)+' de '+items.length+': '+c.nombre+' (FID_R '+c.id+'). Calculando áreas en m²...');
   const basins=await fetchFeatures(cuencasLayer,whereId(cuencasLayer,c.id),true,['*']);if(!basins.length)throw Error('La cuenca FID_R '+c.id+' no tiene geometría en la capa Cuencas.');
   const basinGeom=unionGeoms(basins.map(f=>f.geometry));if(!basinGeom)throw Error('No se pudo obtener geometría FID_R '+c.id);const basinArea=areaM2(basinGeom);if(!basinArea)throw Error('No fue posible calcular área de cuenca FID_R '+c.id+'.');
-  const records=await fetchFeatures(territoryLayer,whereId(territoryLayer,c.id),true,['*']);const data=aggregate(records,basinGeom);
+  const records=await fetchFeatures(territoryLayer,whereId(territoryLayer,c.id),true,['*']);
+  if(!records.length)throw Error('La capa Cuencas_Divipola no devolvió registros asociados al FID_R '+c.id+'. Compruebe que el cruce territorial esté cargado y tenga permisos de consulta.');
+  const data=aggregate(records,basinGeom);
   reportes.push({id:c.id,nombre:c.nombre,area:basinArea,nRecords:records.length,data});geoms.push(basinGeom);
   const color=colors[i%colors.length];overlay.add(new Graphic({geometry:basinGeom,attributes:{FID_R:c.id,NMGCUENCA:c.nombre},symbol:{type:'simple-fill',color:[...color,0.12],outline:{color:[...color,1],width:2.4}},popupTemplate:{title:'{NMGCUENCA}',content:'FID_R: {FID_R}'}}));
   renderReports();
@@ -484,7 +560,7 @@ function buildExportPages(mapPicture){
   txt('PLANES MAESTROS  /  COMPONENTE SOCIAL',L,45,'bold 25px Segoe UI, Arial, sans-serif',color.white);
   txt('Consulta territorial por cuencas hidrográficas',L,80,'19px Segoe UI, Arial, sans-serif','#dbe9f1');
   ctx.strokeStyle=color.line;ctx.beginPath();ctx.moveTo(L,END+20);ctx.lineTo(R,END+20);ctx.stroke();
-  txt('Fuente: Web Map Social · ArcGIS Online · Superficies en metros cuadrados (m²)',L,END+44,'14px Segoe UI, Arial, sans-serif',color.gray);
+  txt('Fuente: Web Map Social / Cuencas_Divipola · ArcGIS Online · Áreas en m²',L,END+44,'14px Segoe UI, Arial, sans-serif',color.gray);
   pages.push(page);y=140;
  }
  function room(needed){if(y+needed>END)newPage();}
