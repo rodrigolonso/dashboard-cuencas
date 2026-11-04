@@ -113,13 +113,23 @@ function flatten(map){const out=[];const walk=(layer,level)=>{out.push({layer,le
 // Selección estricta por nombre: Cuencas_Divipola contiene los cruces territoriales,
 // mientras Cuencas contiene las geometrías y áreas completas de las cuencas.
 const VISIBLE_TITLES=['Cuencas','Cuencas_Divipola','Municipio','Barrios','Comunas','Veredas'];
+// Los títulos pueden diferir de los publicados por una errata en ArcGIS Online.
+// Se conservan nombres canónicos en interfaz y se reconocen los alias reales.
+const LAYER_ALIASES = {
+  Cuencas_Divipola: ['Cuencas_Divipola', 'Cunecas_Divipola']
+};
+function titleMatches(layer, title){
+  const current=String(layer?.title||'').trim();
+  const currentLow=current.toLocaleLowerCase('es');
+  return (LAYER_ALIASES[title]||[title]).some(alias=>{
+    const n=String(alias).toLocaleLowerCase('es');
+    return normalize(current)===normalize(alias)
+      || currentLow.startsWith(n+' (')
+      || currentLow.startsWith(n+' - ');
+  });
+}
 function namedFeature(layers,title){
- const name=normalize(title);
- const candidates=layers.filter(l=>l.type==='feature');
- return candidates.find(l=>normalize(l.title||'')===name)
-  || candidates.find(l=>{const t=String(l.title||'').trim().toLocaleLowerCase('es');
-    const base=String(title).toLocaleLowerCase('es');
-    return t.startsWith(base+' (')||t.startsWith(base+' - ');})||null;
+  return layers.filter(l=>l.type==='feature').find(l=>titleMatches(l,title))||null;
 }
 
 function whereId(layer,id){const f=field(layer,'FID_R');if(!f)throw Error('La capa '+(layer.title||'')+' no dispone de FID_R.');const type=layer.fields.find(x=>x.name===f)?.type||'';const numeric=/integer|double|small-integer|single|long|oid/i.test(type)&&/^-?\d+(\.\d+)?$/.test(String(id));return f+' = '+(numeric?Number(id):"'"+String(id).replace(/'/g,"''")+"'");}
@@ -180,10 +190,10 @@ function renderLayerPanel(){
  layersOfMap=flatten(webmap);
  const host=$('layerOptions');host.innerHTML='';
  for(const title of VISIBLE_TITLES){
-  const item=layersOfMap.find(x=>normalize(x.layer.title||'')===normalize(title));
+  const item=layersOfMap.find(x=>titleMatches(x.layer,title));
   const row=document.createElement('label');row.className='layerrow';
   const ch=document.createElement('input');ch.type='checkbox';
-  const name=document.createElement('span');name.textContent=title;
+  const name=document.createElement('span');name.textContent=item&&item.layer.title!==title ? title+' ('+item.layer.title+' en el mapa)' : title;
   if(item){
    ch.checked=item.layer.visible;
    ch.addEventListener('change',()=>{item.layer.visible=ch.checked;});
@@ -201,7 +211,7 @@ function renderLayerPanel(){
 function updateLayersVisible(state){
  if(!webmap)return;
  for(const title of VISIBLE_TITLES){
-  const item=layersOfMap.find(x=>normalize(x.layer.title||'')===normalize(title));
+  const item=layersOfMap.find(x=>titleMatches(x.layer,title));
   if(item)item.layer.visible=state;
  }
  if(overlay)overlay.visible=state;
@@ -266,7 +276,7 @@ async function connect(){if(processing)return;processing=true;$('conectar').disa
  overlay=new GraphicsLayer({title:'Cuencas consultadas',listMode:'hide'});webmap.add(overlay);
  view=new MapView({container:'viewDiv',map:webmap,ui:{components:['zoom','attribution']}});await view.when();renderLayerPanel();
  for(const id of ['cuenca','filtrarCuencas','basemap','toggleCapas','agregar','consultar','limpiar'])$(id).disabled=false;
- status('Conectado. '+cuencas.length+' cuencas identificadas por FID_R en la capa Cuencas. Fuente territorial: Cuencas_Divipola.');
+ status('Conectado. '+cuencas.length+' cuencas identificadas por FID_R en la capa Cuencas. Fuente territorial: '+territoryLayer.title+'.');
  }catch(err){console.error(err);status('No se pudo conectar: '+(err.message||err)+'. Revise acceso a los servicios en ArcGIS Online.',true);}
  finally{$('conectar').disabled=false;processing=false;}
 }
