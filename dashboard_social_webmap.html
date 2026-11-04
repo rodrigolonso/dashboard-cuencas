@@ -225,7 +225,7 @@ async function connect(){if(processing)return;processing=true;$('conectar').disa
  webmap=new WebMap({portalItem:{id:MAP_ID,portal:{url:'https://www.arcgis.com'}}});await webmap.load();await webmap.loadAll();
  const layers=flatten(webmap).map(x=>x.layer);console.info('Capas encontradas:',layers.map(l=>({titulo:l.title,tipo:l.type,campos:l.fields?.map(f=>f.name)})));
  cuencasLayer=namedFeature(layers,'Cuencas');
- territoryLayer=namedFeature(layers,'Cuencas_Divipola');
+ territoryLayer=namedFeature(layers,'Cuencas_Divipola') || namedFeature(layers,'Cunecas_Divipola');
  if(!cuencasLayer||!territoryLayer){
   throw Error('El Web Map Social debe incluir las capas «Cuencas» y «Cuencas_Divipola». Capas encontradas: '+layers.map(l=>l.title).join(', '));
  }
