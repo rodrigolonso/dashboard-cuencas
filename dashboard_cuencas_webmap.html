@@ -32,6 +32,15 @@ main{height:calc(100vh - 75px);display:grid;grid-template-columns:minmax(365px,4
 
 .card{border-radius:9px;background:white;border:1px solid var(--borde);padding:15px;margin-bottom:12px;box-shadow:0 1px 2px #1835430a}.card h2,.card h3{font-size:14px;font-weight:600;color:var(--azul);margin:0 0 11px}.eyebrow{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--gris)}
 .grid-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.kpi{background:#eef4f7;padding:12px;border-radius:7px;min-height:83px}.kpi .valor{font-size:22px;font-weight:650;color:#1f5670;overflow-wrap:anywhere}.kpi .detalle{font-size:11px;line-height:1.35;color:#5b7180;margin-top:4px}
+.kpi.kpi-editable{cursor:pointer;border:1px solid transparent;transition:background .16s,border-color .16s}
+.kpi.kpi-editable:hover,.kpi.kpi-editable:focus-visible{background:#e3f0f6;border-color:#86adc0;outline:none}
+.kpi .pista-editar{font-size:10px;color:#517a8e;margin-top:5px;opacity:.85}
+.config-kpi{margin-top:11px;padding:12px;background:#f6fafb;border:1px solid #c7dce6;border-radius:7px}
+.config-kpi[hidden]{display:none!important}.config-kpi .fila{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.config-kpi .fila button{padding:3px 9px;background:#fff;color:#2e586a;border-color:#b6cbd6}
+.config-kpi label{margin:8px 0 5px}.config-kpi select{font-size:12px}
+#diagnosticoCapa{position:absolute;z-index:12;left:18px;bottom:20px;max-width:min(440px,calc(100% - 40px));font-size:12px;background:rgba(255,255,255,.95);color:#29495c;border:1px solid #ccdfe8;border-left:4px solid #d49a36;border-radius:6px;padding:9px 12px;box-shadow:0 3px 14px #18384629;display:none}
+#diagnosticoCapa.mostrar{display:block}
 label{display:block;font-size:12px;color:#4d626c;margin:8px 0 5px}input,select{border:1px solid #cbd9e2;padding:10px 11px;background:#fff;border-radius:6px;width:100%;font:inherit;font-size:13px;color:var(--texto)}input:focus,select:focus{outline:2px solid #5f9bb260}
 button{font:inherit;font-size:12px;padding:10px 12px;border-radius:6px;border:1px solid #245c76;background:#26647d;color:white;cursor:pointer;white-space:normal}button:hover{background:#204d62}button.secundario{background:white;color:#245a72;border-color:#c6dbe4}button.secundario:hover{background:#eff6f9}button:disabled{opacity:.45;cursor:wait}.botonera{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.botonera button:first-child{grid-column:span 2}
 #estado,#estadoMapa{font-size:12px;color:#5b6c75;line-height:1.55;margin-top:9px}#estadoMapa{border-top:1px solid #e5edf1;padding-top:8px}
@@ -49,15 +58,22 @@ button{font:inherit;font-size:12px;padding:10px 12px;border-radius:6px;border:1p
 <aside>
  <section class="card"><h2>Resumen general</h2><div class="grid-kpis"><div class="kpi"><div class="valor" id="totalCuencas">62</div><div class="detalle">Cuencas en el archivo actualizado</div></div><div class="kpi"><div class="valor" id="areaTotal">—</div><div class="detalle">Área natural acumulada (km²)</div></div></div></section>
  <section class="card"><h2>Consultar una cuenca</h2><label for="buscar">Buscar por nombre o FID_R</label><input id="buscar" type="search" placeholder="Ej.: La Iguaná, 49"><label for="selector">Cuenca hidrográfica</label><select id="selector" aria-label="Seleccionar cuenca"></select><div id="estado">Variables cargadas desde el CSV actualizado.</div></section>
- <section class="card"><div class="eyebrow">Cuenca seleccionada</div><h2 id="nombreCuenca" style="font-size:17px;margin:5px 0 14px">Selecciona una cuenca</h2><div class="grid-kpis"><div class="kpi"><div class="valor" id="areaCuenca">—</div><div class="detalle">Área natural (km²)</div></div><div class="kpi"><div class="valor" id="pendienteCuenca">—</div><div class="detalle">Pendiente media (%)</div></div><div class="kpi"><div class="valor" id="longitudRed">—</div><div class="detalle">Longitud red hidrográfica (km)</div></div><div class="kpi"><div class="valor" id="densidadDrenaje">—</div><div class="detalle">Densidad drenaje (km/km²)</div></div></div>
+ <section class="card"><div class="eyebrow">Cuenca seleccionada</div><h2 id="nombreCuenca" style="font-size:17px;margin:5px 0 14px">Selecciona una cuenca</h2><div class="grid-kpis" id="tarjetasKpi">
+ <div class="kpi kpi-editable" role="button" tabindex="0" data-kpi="0" title="Haz clic para seleccionar otra variable"><div class="valor" id="areaCuenca">—</div><div class="detalle">Área natural (km²)</div><div class="pista-editar">Cambiar indicador ↗</div></div>
+ <div class="kpi kpi-editable" role="button" tabindex="0" data-kpi="1" title="Haz clic para seleccionar otra variable"><div class="valor" id="pendienteCuenca">—</div><div class="detalle">Pendiente media (%)</div><div class="pista-editar">Cambiar indicador ↗</div></div>
+ <div class="kpi kpi-editable" role="button" tabindex="0" data-kpi="2" title="Haz clic para seleccionar otra variable"><div class="valor" id="longitudRed">—</div><div class="detalle">Longitud red hidrográfica (km)</div><div class="pista-editar">Cambiar indicador ↗</div></div>
+ <div class="kpi kpi-editable" role="button" tabindex="0" data-kpi="3" title="Haz clic para seleccionar otra variable"><div class="valor" id="densidadDrenaje">—</div><div class="detalle">Densidad drenaje (km/km²)</div><div class="pista-editar">Cambiar indicador ↗</div></div>
+ </div>
+ <div class="config-kpi" id="configKpi" hidden><div class="fila"><span id="kpiEditando">Seleccionar indicador</span><button type="button" id="cerrarKpi" aria-label="Cerrar selección de indicador">✕</button></div><label for="variableKpi">Variable calculada</label><select id="variableKpi" aria-label="Variable que se mostrará en la tarjeta"></select></div>
  <div class="botonera"><button id="btnExcel">Descargar ficha Excel (una hoja)</button><button id="btnImprimir" class="secundario">Ficha para imprimir / PDF</button><button id="btnInicio" class="secundario">Volver a Medellín</button></div>
- <p class="ayuda">La ficha conserva los valores calculados del CSV. El mapa se captura del visor y requiere que la capa cartográfica esté accesible. Si la capa está protegida, configura la API Key en el HTML antes de publicarlo.</p><div id="estadoMapa">Comprobando acceso al mapa...</div></section>
+ <p class="ayuda">La ficha conserva los valores calculados del CSV. El mapa se captura del visor y requiere que la capa cartográfica esté accesible. El mapa se obtiene del servicio Cuenca_N. La clave configurada en GitHub debe mantenerse al reemplazar este HTML.</p><div id="estadoMapa">Comprobando acceso al mapa...</div></section>
  <section class="card"><h3>Diez cuencas con mayor área natural</h3><div class="chartbox"><canvas id="graficaAreas"></canvas></div><p class="ayuda">Selecciona una barra para consultar una cuenca.</p></section>
  <section class="card"><h3>Coberturas terrestres nivel 1</h3><div class="chartbox"><canvas id="graficaCoberturas"></canvas></div></section>
  <section class="card"><h3>Variables por temática</h3><div class="secciones" id="listadoTemas"></div></section>
 </aside>
 <div id="mapa">
  <div id="viewDiv"></div>
+ <div id="diagnosticoCapa" role="status" aria-live="polite"></div>
  <div class="controles-mapa" id="controlesMapa">
   <div class="barra-mapa" role="group" aria-label="Controles de visualización del mapa">
    <button type="button" id="btnCapasMapa" aria-controls="panelCapasMapa" aria-expanded="false">☷ Capas</button>
@@ -84,6 +100,7 @@ const TEMATICAS=[{"titulo":"Información general de la cuenca","items":[{"campo"
 const WEBMAP_ID='e9084da10e1941b4a5c650eab8694af9';
 const URL_CAPA_ORIGINAL='https://services2.arcgis.com/wEXW4SJ1RjesNPgA/arcgis/rest/services/Cuenca_N/FeatureServer/0';
 const URL_CAPA_ACTUALIZADA=''; // Si publicas Cuenca_NC, coloca aquí la URL completa .../FeatureServer/0.
+const CUENCA_ITEM_ID='0d1032f2c7674627894cb8283b31786d';
 const API_KEY='AAPTaRmtwJJFjtEUzbT8zmOuoFw..iEeVoHKSra0rYqX4KlMhVG99zKZVUQ56AmSXAskFcozcTGA16ZOj5KZwfZUtgFHAV2M4HdNd07QO_IdYZLaCX3Qh34_9IJmvM5_BMiG7taiXzwlB_2in7FLmPVNS3odReKy8wFscRDHSK6vg4UOmVoZIJI7Tw5-Mwcox1kxQik6C2BQWIQiJav49f01mLxGuWkxQNt_zwJDBJh5i0yLgJOqKNLWg4ec9OiExBm6jO7XH9aUhuyrT2bKFkT11HbZ2ZKIemI2koVapAT1_WZEvd0HH'; // Si tu WebMap/servicio exige una clave pública, pégala aquí y limita sus referrers a rodrigolonso.github.io. Nunca pegues credenciales de usuario ni secretos OAuth.
 const $=id=>document.getElementById(id);
 const formato=new Intl.NumberFormat('es-CO',{maximumFractionDigits:4});
@@ -92,6 +109,9 @@ const formatoPequeno=new Intl.NumberFormat('es-CO',{maximumFractionDigits:10});
 let vista=null,capa=null,GraphicClass=null,GraphicsLayerClass=null,FeatureLayerClass=null,MapClass=null;
 let seleccion=null,graficaAreas=null,graficaCoberturas=null,figuraSeleccion=null,layerResaltado=null;
 let mapaListo=false,ultimoMapaError='La geometría no está disponible.',wmActual=null;
+const kpiIds=['areaCuenca','pendienteCuenca','longitudRed','densidadDrenaje'];
+let kpiCampos=['AREA_N_KM2','PEND_CU_PCT','L_RED_KM','DENS_DREN'];
+let kpiEditando=-1;
 const porId=new Map(REGISTROS.map(a=>[normalizarId(a.FID_R),a]));
 const elementosOrdenados=[...REGISTROS].sort((a,b)=>String(a.NMGCUENCA).localeCompare(String(b.NMGCUENCA),'es'));
 function normalizarId(v){const s=String(v??'').trim();return /^\d+$/.test(s)?String(Number(s)):s;}
@@ -100,12 +120,18 @@ function num(v){if(v===null||v===undefined||String(v).trim()===''||String(v).tri
 function mostrar(v){const n=num(v);if(n===null)return !v||String(v).toUpperCase()==='NA'?'Sin dato':String(v);return n!==0&&Math.abs(n)<1e-9?n.toExponential(3):(n!==0&&Math.abs(n)<0.001?formatoPequeno.format(n):formato.format(n));}
 function estado(t){$('estado').textContent=t;}
 function estadoMapa(t){$('estadoMapa').textContent=t;}
+function etiquetaCampo(campo){for(const sec of TEMATICAS){const item=sec.items.find(i=>i.campo===campo);if(item)return item.etiqueta+(item.unidad?' ('+item.unidad+')':'');}return campo;}
+function crearOpcionesKpi(){const select=$('variableKpi');select.replaceChildren();for(const seccion of TEMATICAS){const grupo=document.createElement('optgroup');grupo.label=seccion.titulo;for(const it of seccion.items){if(!REGISTROS.some(a=>num(a[it.campo])!==null))continue;const option=document.createElement('option');option.value=it.campo;option.textContent=it.etiqueta+(it.unidad?' ['+it.unidad+']':'');grupo.appendChild(option);}if(grupo.children.length)select.appendChild(grupo);}}
+function refrescarKpi(){for(let i=0;i<4;i++){const campo=kpiCampos[i],card=$('tarjetasKpi').querySelector('[data-kpi="'+i+'"]');$(kpiIds[i]).textContent=seleccion?mostrar(seleccion[campo]):'—';card.querySelector('.detalle').textContent=etiquetaCampo(campo);card.setAttribute('aria-label','Indicador '+(i+1)+': '+etiquetaCampo(campo)+'. Cambiar variable.');}}
+function abrirKpi(i){kpiEditando=i;$('configKpi').hidden=false;$('kpiEditando').textContent='Variable de la tarjeta '+(i+1);$('variableKpi').value=kpiCampos[i];$('variableKpi').focus({preventScroll:true});$('configKpi').scrollIntoView({block:'nearest',behavior:'smooth'});}
+function configurarKpi(){crearOpcionesKpi();$('tarjetasKpi').querySelectorAll('.kpi-editable').forEach(card=>{const idx=Number(card.dataset.kpi);card.addEventListener('click',()=>abrirKpi(idx));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirKpi(idx);}});});$('variableKpi').addEventListener('change',e=>{if(kpiEditando<0)return;kpiCampos[kpiEditando]=e.target.value;refrescarKpi();});$('cerrarKpi').addEventListener('click',()=>{ $('configKpi').hidden=true;kpiEditando=-1;});}
+function advertirCapa(texto){const el=$('diagnosticoCapa');el.textContent=texto;el.classList.toggle('mostrar',Boolean(texto));}
 function nombreArchivo(a,ext){return 'Diagnostico_Cuenca_'+String(a.NMGCUENCA||a.FID_R).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,44)+'_'+a.FID_R+'.'+ext;}
 function buscarLista(){const filtro=$('buscar').value.toLocaleLowerCase('es').trim();const actuales=elementosOrdenados.filter(a=>String(a.NMGCUENCA).toLocaleLowerCase('es').includes(filtro)||String(a.FID_R).includes(filtro));$('selector').replaceChildren();for(const a of actuales){const op=document.createElement('option');op.value=normalizarId(a.FID_R);op.textContent=a.NMGCUENCA+' (FID_R '+a.FID_R+')';$('selector').append(op);}if(seleccion&&actuales.includes(seleccion))$('selector').value=normalizarId(seleccion.FID_R);}
 function construirTematicas(a){const cont=$('listadoTemas');cont.replaceChildren();for(let i=0;i<TEMATICAS.length;i++){const sec=TEMATICAS[i];const details=document.createElement('details');details.className='tema';if(i<2)details.open=true;const summary=document.createElement('summary');summary.textContent=sec.titulo+' ('+sec.items.length+')';details.append(summary);const wrapper=document.createElement('div');wrapper.className='tabla-scroll';const table=document.createElement('table');const tb=document.createElement('tbody');for(const item of sec.items){const tr=document.createElement('tr');for(const txt of [item.etiqueta,mostrar(a[item.campo]),item.unidad]){const td=document.createElement('td');td.textContent=txt;tr.append(td);}tb.append(tr);}table.append(tb);wrapper.append(table);details.append(wrapper);cont.append(details);}}
 function actualizarCoberturas(a){if(!window.Chart)return;if(graficaCoberturas)graficaCoberturas.destroy();const vals=[['Bosques y áreas seminaturales',num(a.N1_BOS_P),'#3e8667'],['Territorios agrícolas',num(a.N1_AGR_P),'#d6b255'],['Territorios artificializados',num(a.N1_ART_P),'#ae7980']].filter(x=>x[1]!==null&&x[1]>=0);graficaCoberturas=new Chart($('graficaCoberturas'),{type:'doughnut',data:{labels:vals.map(x=>x[0]),datasets:[{data:vals.map(x=>x[1]),backgroundColor:vals.map(x=>x[2])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:c=>c.label+': '+mostrar(c.raw)+' %'}}}}});}
 function actualizarBarras(){if(!window.Chart)return;if(graficaAreas)graficaAreas.destroy();const mayores=elementosOrdenados.filter(a=>num(a.AREA_N_KM2)!==null).sort((a,b)=>num(b.AREA_N_KM2)-num(a.AREA_N_KM2)).slice(0,10);graficaAreas=new Chart($('graficaAreas'),{type:'bar',data:{labels:mayores.map(a=>a.NMGCUENCA),datasets:[{label:'Área (km²)',data:mayores.map(a=>num(a.AREA_N_KM2)),backgroundColor:'#5391a6',borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true},y:{ticks:{font:{size:10},autoSkip:false}}},onClick:(_e,items)=>{if(items.length)seleccionar(mayores[items[0].index],true);}}});}
-async function seleccionar(a,mover=true,geometriaClick=null){if(!a)return;seleccion=a;figuraSeleccion=null;$('nombreCuenca').textContent=a.NMGCUENCA+' · FID_R '+a.FID_R;$('areaCuenca').textContent=mostrar(a.AREA_N_KM2);$('pendienteCuenca').textContent=mostrar(a.PEND_CU_PCT);$('longitudRed').textContent=mostrar(a.L_RED_KM);$('densidadDrenaje').textContent=mostrar(a.DENS_DREN);$('selector').value=normalizarId(a.FID_R);construirTematicas(a);actualizarCoberturas(a);estado('Indicadores consultados del archivo de 22/11/2026 (FID_R '+a.FID_R+').');if(mapaListo){await centrarCuenca(a,mover,geometriaClick);}else estadoMapa('Datos cargados. Sin acceso a la geometría cartográfica: '+ultimoMapaError);}
+async function seleccionar(a,mover=true,geometriaClick=null){if(!a)return;seleccion=a;figuraSeleccion=null;$('nombreCuenca').textContent=a.NMGCUENCA+' · FID_R '+a.FID_R;refrescarKpi();$('selector').value=normalizarId(a.FID_R);construirTematicas(a);actualizarCoberturas(a);estado('Indicadores consultados del archivo de 22/11/2026 (FID_R '+a.FID_R+').');if(mapaListo){await centrarCuenca(a,mover,geometriaClick);}else estadoMapa('Datos cargados. Sin acceso a la geometría cartográfica: '+ultimoMapaError);}
 async function centrarCuenca(a,mover=true,geometria=null){if(!mapaListo||!capa||!vista)return;try{if(!geometria){const f=capa.fields.find(x=>x.name.toUpperCase()==='FID_R');if(!f)throw Error('La capa del WebMap no tiene el campo FID_R para realizar el cruce.');const q=capa.createQuery();const id=normalizarId(a.FID_R);q.where=f.type==='string'?"FID_R = '"+id.replaceAll("'","''")+"'":'FID_R = '+Number(id);q.returnGeometry=true;q.outFields=['*'];const res=await capa.queryFeatures(q);if(!res.features.length)throw Error('No se encontró geometría con FID_R '+id+' en la capa publicada.');geometria=res.features[0].geometry;}
  if(!geometria)throw Error('La entidad no contiene geometría.');
  figuraSeleccion=geometria;layerResaltado.removeAll();layerResaltado.add(new GraphicClass({geometry:geometria,symbol:{type:'simple-fill',color:[243,177,66,0.15],outline:{color:[221,97,20,1],width:2.5}}}));
@@ -146,7 +172,7 @@ function prepararCapas(lista=null){
   nota.textContent='Esperando la carga del WebMap. Si permanece así, revisa la API Key y los permisos del servicio.';
   cont.appendChild(nota);return;
  }
- const capas=lista.filter(c=>c?.listMode!=='hide' && c?.type!=='graphics' && c?.type!=='group');
+ const capas=lista.filter(c=>c?.listMode!=='hide' && c?.type!=='graphics' && c?.type!=='group' && !/^(world imagery|imagery|satellite|mapa base)$/i.test(c?.title||''));
  if(!capas.length){
   const p=document.createElement('p');p.className='panel-mapa-ayuda';p.textContent='El WebMap se abrió pero no devolvió capas operativas.';cont.appendChild(p);return;
  }
@@ -176,7 +202,7 @@ function configurarControlesMapa(){
  });
 }
 function configurarEventos(){
- configurarControlesMapa();
+ configurarControlesMapa();configurarKpi();
  $('buscar').addEventListener('input',()=>{buscarLista();});
  $('buscar').addEventListener('keydown',e=>{if(e.key==='Enter'){const a=porId.get($('selector').value);if(a)seleccionar(a,true);}});
  $('selector').addEventListener('change',()=>seleccionar(porId.get($('selector').value),true));
@@ -185,32 +211,71 @@ function configurarEventos(){
  $('btnInicio').addEventListener('click',()=>{if(vista)vista.goTo({center:[-75.57,6.25],zoom:11},{duration:450});});
 }
 function iniciarDatos(){const total=REGISTROS.reduce((s,a)=>s+(num(a.AREA_N_KM2)||0),0);$('totalCuencas').textContent=REGISTROS.length;$('areaTotal').textContent=formato.format(total);buscarLista();configurarEventos();actualizarBarras();seleccionar(elementosOrdenados[0],false);}
-function iniciarMapa(){if(typeof window.require!=='function'){ultimoMapaError='No se cargó la biblioteca de ArcGIS. Comprueba la conexión a Internet.';estadoMapa(ultimoMapaError);return;}
+// El WebMap conserva los drenajes y Cuenca_A, pero la capa de cuenca principal
+// se crea con una fuente explícita y una simbología propia. Así no se reutiliza
+// accidentalmente un elemento sustituido en ArcGIS Online.
+function iniciarMapa(){
+ if(typeof window.require!=='function'){
+  ultimoMapaError='No se cargó la biblioteca de ArcGIS. Comprueba la conexión a Internet.';
+  estadoMapa(ultimoMapaError);advertirCapa('Cuenca_N: '+ultimoMapaError);return;
+ }
  require(['esri/config','esri/WebMap','esri/views/MapView','esri/layers/FeatureLayer','esri/layers/GraphicsLayer','esri/Graphic','esri/widgets/ScaleBar','esri/widgets/Legend'],async function(esriConfig,WebMap,MapView,FeatureLayer,GraphicsLayer,Graphic,ScaleBar,Legend){
   try{
-  if(API_KEY&&!API_KEY.startsWith('PEGA_'))esriConfig.apiKey=API_KEY;
-  GraphicClass=Graphic;GraphicsLayerClass=GraphicsLayer;FeatureLayerClass=FeatureLayer;
-  const wm=new WebMap({portalItem:{id:WEBMAP_ID}});
-  wmActual=wm;
-  vista=new MapView({container:'viewDiv',map:wm,center:[-75.57,6.25],zoom:11,constraints:{rotationEnabled:false}});
-  await vista.when();
-  // Mostrar el panel de capas incluso cuando falle el acceso a Cuenca_N.
-  prepararCapas(wm.allLayers.toArray());
-  const candidatas=wm.allLayers.toArray().filter(l=>l.type==='feature'&&(/cuenca_nc/i.test(l.title)||/cuenca_n/i.test(l.title)||/\/Cuenca_N(?:C)?\//i.test(l.url||'')));
-  candidatas.sort((a,b)=>(/cuenca_nc/i.test(b.title)?1:0)-(/cuenca_nc/i.test(a.title)?1:0));
-  capa=candidatas[0];
-  if(URL_CAPA_ACTUALIZADA.trim()){capa=new FeatureLayer({url:URL_CAPA_ACTUALIZADA.trim(),title:'Cuenca_NC actualizada'});wm.add(capa);}
-  if(!capa){capa=new FeatureLayer({url:URL_CAPA_ORIGINAL,title:'Cuenca_N (servicio indicado)'});wm.add(capa);}
-  prepararCapas(wm.allLayers.toArray());
-  await capa.load();
-  capa.visible=true;
-  layerResaltado=new GraphicsLayer({title:'Cuenca seleccionada - contorno',listMode:'hide'});wm.add(layerResaltado);
-  vista.ui.add(new ScaleBar({view:vista,unit:'metric'}),'bottom-left');
-  vista.ui.add(new Legend({view:vista}),'bottom-right');
-  mapaListo=true;ultimoMapaError='';
-  vista.on('click',async evento=>{try{const hit=await vista.hitTest(evento,{include:[capa]});const obtenido=hit.results.find(r=>r.graphic&&r.graphic.layer===capa);if(!obtenido)return;const g=obtenido.graphic;const f=capa.fields.find(x=>x.name.toUpperCase()==='FID_R');let id=f?g.attributes[f.name]:null;if((id===null||id===undefined)&&g.attributes[capa.objectIdField]!==undefined){const q=capa.createQuery();q.objectIds=[g.attributes[capa.objectIdField]];q.outFields=['FID_R'];q.returnGeometry=false;const found=await capa.queryFeatures(q);id=found.features[0]?.attributes?.FID_R;}const a=porId.get(normalizarId(id));if(a)await seleccionar(a,true,g.geometry);else estadoMapa('El polígono no tiene coincidencia FID_R con el CSV actualizado.');}catch(e){estadoMapa('Error al seleccionar: '+e.message);}});
-  if(seleccion)await centrarCuenca(seleccion,true);
-  }catch(e){ultimoMapaError=e?.message||String(e);console.error('No se pudo iniciar el mapa:',e);estadoMapa('Mapa sin acceso: '+ultimoMapaError+'. Los indicadores y los reportes tabulares siguen disponibles.'+(API_KEY?'':' Falta configurar API_KEY en el archivo HTML.'));}
+   if(API_KEY&& !API_KEY.startsWith('PEGA_')) esriConfig.apiKey=API_KEY;
+   GraphicClass=Graphic;GraphicsLayerClass=GraphicsLayer;FeatureLayerClass=FeatureLayer;
+   const wm=new WebMap({portalItem:{id:WEBMAP_ID}});
+   wmActual=wm;
+   vista=new MapView({container:'viewDiv',map:wm,center:[-75.57,6.25],zoom:11,constraints:{rotationEnabled:false}});
+   await vista.when();
+   // Retirar el vínculo viejo del WebMap; su casilla podía estar marcada aunque el servicio no dibujara.
+   const capasPrevias=wm.allLayers.toArray().filter(l=>l.type==='feature' && (/^cuenca[_ ]n(?:c)?$/i.test((l.title||'').trim()) || /\/Cuenca_N(?:C)?\/FeatureServer/i.test(l.url||'')));
+   for(const antigua of capasPrevias){wm.remove(antigua);}
+   const urlNueva=URL_CAPA_ACTUALIZADA.trim()||URL_CAPA_ORIGINAL;
+   const simbolo={type:'simple',symbol:{type:'simple-fill',color:[26,135,175,0.11],outline:{color:[18,121,158,1],width:1.4}}};
+   const opciones={title:'Cuenca_N',visible:true,opacity:1,minScale:0,maxScale:0,renderer:simbolo,outFields:['*'],popupEnabled:true};
+   // Usar la API Key tanto globalmente como en la capa; el mapa base no prueba el acceso al FeatureServer.
+   if(API_KEY&& !API_KEY.startsWith('PEGA_')) opciones.apiKey=API_KEY;
+   const fuentes=[{url:urlNueva},{portalItem:{id:CUENCA_ITEM_ID,...(API_KEY?{apiKey:API_KEY}:{})}}];
+   const fallos=[];
+   for(const fuente of fuentes){
+    let candidata=null;
+    try{
+     candidata=new FeatureLayer({...opciones,...fuente});
+     wm.add(candidata);
+     await candidata.load();
+     const q=candidata.createQuery();q.where='1=1';q.returnGeometry=true;q.outFields=[candidata.objectIdField];q.num=1;
+     const prueba=await candidata.queryFeatures(q);
+     if(!prueba.features?.length || !prueba.features[0].geometry)throw Error('La consulta no devolvió polígonos con geometría.');
+     capa=candidata;break;
+    }catch(err){fallos.push((fuente.url?'Servicio directo':'Elemento de ArcGIS')+': '+(err.message||String(err)));if(candidata)wm.remove(candidata);}
+   }
+   prepararCapas(wm.allLayers.toArray());
+   if(!capa)throw Error('Cuenca_N no entrega geometrías. '+fallos.join(' | '));
+   capa.visible=true;
+   layerResaltado=new GraphicsLayer({title:'Cuenca seleccionada - contorno',listMode:'hide'});
+   wm.add(layerResaltado);
+   vista.ui.add(new ScaleBar({view:vista,unit:'metric'}),'bottom-left');
+   vista.ui.add(new Legend({view:vista}),'bottom-right');
+   // La carga del FeatureLayer y el dibujo de sus entidades son procesos distintos.
+   try{await vista.whenLayerView(capa);}catch(e){console.warn('La vista de Cuenca_N todavía no dibuja:',e.message);}
+   mapaListo=true;ultimoMapaError='';advertirCapa('');
+   vista.on('click',async evento=>{
+    try{const hit=await vista.hitTest(evento,{include:[capa]});const obtenido=hit.results.find(r=>r.graphic&&r.graphic.layer===capa);if(!obtenido)return;
+     const g=obtenido.graphic;
+     const f=capa.fields.find(x=>x.name.toUpperCase()==='FID_R');let id=f?g.attributes[f.name]:null;
+     if((id===null||id===undefined)&&g.attributes[capa.objectIdField]!==undefined){const q=capa.createQuery();q.objectIds=[g.attributes[capa.objectIdField]];q.outFields=['FID_R'];q.returnGeometry=false;const found=await capa.queryFeatures(q);id=found.features[0]?.attributes?.FID_R;}
+     const a=porId.get(normalizarId(id));
+     if(a)await seleccionar(a,true,g.geometry);
+     else estadoMapa('El polígono no tiene coincidencia FID_R con el CSV actualizado.');
+    }catch(e){estadoMapa('Error al seleccionar: '+e.message);}
+   });
+   if(seleccion)await centrarCuenca(seleccion,true);
+  }catch(e){
+   mapaListo=false;ultimoMapaError=e?.message||String(e);
+   console.error('Error cartográfico Cuenca_N:',e);
+   estadoMapa('Mapa: '+ultimoMapaError+'. Los indicadores tabulares continúan disponibles.');
+   advertirCapa('Cuenca_N no pudo cargarse: '+ultimoMapaError+'. Revisa las consultas y la API Key en ArcGIS Online.');
+  }
  });
 }
 function fecha(){return new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});}
