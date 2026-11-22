@@ -71,6 +71,7 @@ button{font:inherit;font-size:12px;padding:10px 12px;border-radius:6px;border:1p
 .pdf-documento td:first-child{width:63%}
 .pdf-documento td:nth-child(2){width:23%;text-align:right}
 .pdf-documento td:nth-child(3){width:14%;color:#526b78}
+.pdf-documento .pdf-seccion-mapa{break-inside:avoid;page-break-inside:avoid}
 .pdf-documento .pdf-mapa{display:block;width:100%;max-height:360px;object-fit:contain;border:1px solid #d9e4e9;margin:9px 0}
 .pdf-documento .pdf-nota-mapa{border:1px dashed #bdcfd8;background:#f6f9fa;padding:14px;color:#647581;margin:8px 0}
 .pdf-documento .pdf-pie{font-size:10px;color:#6a7b84;margin-top:20px}
@@ -537,38 +538,52 @@ async function descargarExcel(){
  }catch(e){console.error('Error al exportar la ficha',e);estado('Error al generar la ficha Excel: '+e.message);}
  finally{boton.disabled=!seleccion;boton.textContent='Descargar ficha Excel (una hoja)';}
 }
-function crearFichaImprimible(){
- // Crear el informe de inmediato. Nunca abrir about:blank ni esperar la captura para mostrar datos.
- if(!seleccion)return;
- const a=seleccion, panel=$('vistaFichaPDF'), cuerpo=$('documentoFichaPDF');
- const secciones=TEMATICAS.map(sec=>`<section><h2>${escapar(sec.titulo)}</h2><table><tbody>${sec.items.map(i=>`<tr><td>${escapar(i.etiqueta)}</td><td>${escapar(mostrar(a[i.campo]))}</td><td>${escapar(i.unidad)}</td></tr>`).join('')}</tbody></table></section>`).join('');
- cuerpo.innerHTML=`<h1>Ficha de diagnóstico · ${escapar(a.NMGCUENCA||'Cuenca')}</h1>
-  <div class="pdf-meta">Planes Maestros del Sistema Hídrico | Distrito de Medellín<br>
-  FID_R: ${escapar(a.FID_R)} · Base de indicadores: 22/11/2026 · Fecha del reporte: ${fecha()}</div>
-  <section><h2>Localización cartográfica</h2>
-   <div id="mapaFichaPDF" class="pdf-nota-mapa">Consultando imagen del mapa. Puedes imprimir los indicadores sin esperar.</div></section>
-  ${secciones}<p class="pdf-pie">${escapar(etiquetaResumen())}</p>`;
- panel.hidden=false; document.body.classList.add('ficha-pdf-abierta');
- $('estadoFichaPDF').textContent='Indicadores listos. Capturando mapa si está disponible…';
- panel.dataset.cuenca=String(a.FID_R);
- $('btnGuardarPDF').focus();
- // Si ArcGIS no responde, se imprimen igualmente todos los datos de la ficha.
- capturaParaReporte().then(snap=>{
-  if(panel.hidden || panel.dataset.cuenca!==String(a.FID_R))return;
-  const lugar=$('mapaFichaPDF');if(!lugar)return;
-  if(snap.src){
-   const img=document.createElement('img');img.className='pdf-mapa';img.alt='Mapa de '+a.NMGCUENCA;
-   img.src=snap.src;lugar.replaceWith(img);
-   $('estadoFichaPDF').textContent='Mapa incorporado. Listo para imprimir o guardar como PDF.';
-  }else{
-   lugar.textContent='Mapa no disponible en esta impresión: '+(snap.error||'sin imagen.');
-   $('estadoFichaPDF').textContent='Ficha lista. Indicadores completos; mapa no disponible.';
+let preparandoFichaPDF = false;
+async function crearFichaImprimible(){
+ // El mapa se captura ANTES de abrir la vista previa. Es el mismo proceso
+ // que utiliza la exportación XLSX y evita ocultar MapView con el overlay.
+ if(!seleccion || preparandoFichaPDF)return;
+ const a=seleccion, boton=$('btnImprimir');
+ preparandoFichaPDF=true;boton.disabled=true;
+ const etiquetaBoton=boton.textContent;
+ boton.textContent='Capturando mapa para PDF…';
+ estado('Preparando mapa e indicadores para PDF…');
+ try{
+  const captura=await capturaParaReporte();
+  // El usuario puede seleccionar otra cuenca mientras ArcGIS prepara la captura.
+  if(!seleccion || String(seleccion.FID_R)!==String(a.FID_R)){
+   estado('Cambió la cuenca seleccionada; vuelve a generar la ficha.');return;
   }
- }).catch(e=>{
-  if(panel.hidden)return;
-  const lugar=$('mapaFichaPDF');if(lugar)lugar.textContent='Mapa no disponible: '+(e.message||String(e));
-  $('estadoFichaPDF').textContent='Ficha lista con indicadores; mapa no disponible.';
- });
+  const panel=$('vistaFichaPDF'),cuerpo=$('documentoFichaPDF');
+  const secciones=TEMATICAS.map(sec=>`<section><h2>${escapar(sec.titulo)}</h2><table><tbody>${sec.items.map(i=>`<tr><td>${escapar(i.etiqueta)}</td><td>${escapar(mostrar(a[i.campo]))}</td><td>${escapar(i.unidad)}</td></tr>`).join('')}</tbody></table></section>`).join('');
+  let mapa='';
+  if(captura.src){
+   // Decodificar ANTES de habilitar la impresión evita imágenes vacías en Chrome.
+   const img=new Image();img.src=captura.src;
+   try{if(typeof img.decode==='function')await img.decode();else await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;});}
+   catch(e){captura.src=null;captura.error='No se pudo decodificar la imagen PNG del mapa.';}
+  }
+  if(captura.src){
+   // Fuente segura: data URL generada por ArcGIS (no contiene texto de usuarios).
+   mapa=`<img class="pdf-mapa" alt="Mapa de ${escapar(a.NMGCUENCA||'la cuenca')}" src="${captura.src}">`;
+  }else{
+   mapa=`<p class="pdf-nota-mapa">No fue posible capturar el mapa: ${escapar(captura.error||'sin imagen')}. Los indicadores están disponibles.</p>`;
+  }
+  cuerpo.innerHTML=`<h1>Ficha de diagnóstico · ${escapar(a.NMGCUENCA||'Cuenca')}</h1>
+   <div class="pdf-meta">Planes Maestros del Sistema Hídrico | Distrito de Medellín<br>
+   FID_R: ${escapar(a.FID_R)} · Base de indicadores: 22/11/2026 · Fecha del reporte: ${fecha()}</div>
+   <section class="pdf-seccion-mapa"><h2>Localización cartográfica</h2>${mapa}</section>
+   ${secciones}<p class="pdf-pie">${escapar(etiquetaResumen())}</p>`;
+  panel.dataset.cuenca=String(a.FID_R);
+  panel.hidden=false;document.body.classList.add('ficha-pdf-abierta');
+  $('estadoFichaPDF').textContent=captura.src
+   ? 'Mapa e indicadores incorporados. Listo para imprimir o guardar como PDF.'
+   : 'Indicadores listos. No se pudo capturar el mapa: '+captura.error;
+  // Esperar que los estilos de impresión y la imagen estén listos.
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  $('btnGuardarPDF').focus();
+ }catch(e){console.error('Error al preparar PDF:',e);estado('Error al preparar la ficha PDF: '+(e.message||e));}
+ finally{preparandoFichaPDF=false;boton.disabled=!seleccion;boton.textContent=etiquetaBoton;}
 }
 function cerrarFichaImprimible(){
  $('vistaFichaPDF').hidden=true;document.body.classList.remove('ficha-pdf-abierta');
