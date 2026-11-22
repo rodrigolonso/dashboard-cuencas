@@ -242,6 +242,9 @@ function iniciarMapa(){
    // aun cuando Map Viewer podía dibujarla, generando un error innecesario.
    async function examinar(lyr,origen){
     try{
+     // Se asigna la credencial también a la capa del WebMap.
+     // No dependemos únicamente de la configuración global.
+     if(API_KEY && !API_KEY.startsWith('PEGA_')) lyr.apiKey=API_KEY;
      await lyr.load();
      const q=lyr.createQuery();q.where='1=1';q.outFields=[lyr.objectIdField||'*'];
      q.returnGeometry=true;q.num=1;
@@ -254,8 +257,11 @@ function iniciarMapa(){
      capa=lyr;
      return true;
     }catch(e){
-     intentos.push(origen+': '+(e?.message||String(e)));
-     console.warn('Cuenca_N - '+origen,e);
+     const detalle=e?.message||String(e);
+     intentos.push(origen+': '+detalle);
+     console.warn('Cuenca_N - '+origen,'item:',CUENCA_ITEM_ID,
+                  'url:',lyr.url||'(WebMap)',
+                  'clave configurada:',Boolean(API_KEY),'detalle:',detalle,e);
      return false;
     }
    }
