@@ -211,59 +211,97 @@ function configurarEventos(){
  $('btnInicio').addEventListener('click',()=>{if(vista)vista.goTo({center:[-75.57,6.25],zoom:11},{duration:450});});
 }
 function iniciarDatos(){const total=REGISTROS.reduce((s,a)=>s+(num(a.AREA_N_KM2)||0),0);$('totalCuencas').textContent=REGISTROS.length;$('areaTotal').textContent=formato.format(total);buscarLista();configurarEventos();actualizarBarras();seleccionar(elementosOrdenados[0],false);}
-// El WebMap conserva los drenajes y Cuenca_A, pero la capa de cuenca principal
-// se crea con una fuente explícita y una simbología propia. Así no se reutiliza
-// accidentalmente un elemento sustituido en ArcGIS Online.
+// Cuenca_N se intenta recuperar PRIMERO del WebMap sin retirarla ni reconstruirla.
+// El acceso al mapa en ArcGIS Online con sesión iniciada puede diferir del de una API Key.
 function iniciarMapa(){
  if(typeof window.require!=='function'){
-  ultimoMapaError='No se cargó la biblioteca de ArcGIS. Comprueba la conexión a Internet.';
-  estadoMapa(ultimoMapaError);advertirCapa('Cuenca_N: '+ultimoMapaError);return;
+  ultimoMapaError='No se cargó la biblioteca ArcGIS JavaScript.';
+  estadoMapa(ultimoMapaError);advertirCapa(ultimoMapaError);return;
  }
- require(['esri/config','esri/WebMap','esri/views/MapView','esri/layers/FeatureLayer','esri/layers/GraphicsLayer','esri/Graphic','esri/widgets/ScaleBar','esri/widgets/Legend'],async function(esriConfig,WebMap,MapView,FeatureLayer,GraphicsLayer,Graphic,ScaleBar,Legend){
+ require(['esri/config','esri/WebMap','esri/views/MapView','esri/layers/FeatureLayer',
+          'esri/layers/GraphicsLayer','esri/Graphic','esri/widgets/ScaleBar',
+          'esri/widgets/Legend'],
+ async function(esriConfig,WebMap,MapView,FeatureLayer,GraphicsLayer,Graphic,ScaleBar,Legend){
   try{
-   if(API_KEY&& !API_KEY.startsWith('PEGA_')) esriConfig.apiKey=API_KEY;
+   if(API_KEY&& !API_KEY.startsWith('PEGA_'))esriConfig.apiKey=API_KEY;
    GraphicClass=Graphic;GraphicsLayerClass=GraphicsLayer;FeatureLayerClass=FeatureLayer;
-   const wm=new WebMap({portalItem:{id:WEBMAP_ID}});
-   wmActual=wm;
-   vista=new MapView({container:'viewDiv',map:wm,center:[-75.57,6.25],zoom:11,constraints:{rotationEnabled:false}});
+   const wm=new WebMap({portalItem:{id:WEBMAP_ID}});wmActual=wm;
+   vista=new MapView({container:'viewDiv',map:wm,center:[-75.57,6.25],zoom:11,
+                      constraints:{rotationEnabled:false}});
    await vista.when();
-   // Retirar el vínculo viejo del WebMap; su casilla podía estar marcada aunque el servicio no dibujara.
-   const capasPrevias=wm.allLayers.toArray().filter(l=>l.type==='feature' && (/^cuenca[_ ]n(?:c)?$/i.test((l.title||'').trim()) || /\/Cuenca_N(?:C)?\/FeatureServer/i.test(l.url||'')));
-   for(const antigua of capasPrevias){wm.remove(antigua);}
-   const urlNueva=URL_CAPA_ACTUALIZADA.trim()||URL_CAPA_ORIGINAL;
-   const simbolo={type:'simple',symbol:{type:'simple-fill',color:[26,135,175,0.11],outline:{color:[18,121,158,1],width:1.4}}};
-   const opciones={title:'Cuenca_N',visible:true,opacity:1,minScale:0,maxScale:0,renderer:simbolo,outFields:['*'],popupEnabled:true};
-   // Usar la API Key tanto globalmente como en la capa; el mapa base no prueba el acceso al FeatureServer.
-   if(API_KEY&& !API_KEY.startsWith('PEGA_')) opciones.apiKey=API_KEY;
-   const fuentes=[{url:urlNueva},{portalItem:{id:CUENCA_ITEM_ID,...(API_KEY?{apiKey:API_KEY}:{})}}];
-   const fallos=[];
-   for(const fuente of fuentes){
-    let candidata=null;
+   if(typeof wm.load==='function')await wm.load();
+   const simbolo={type:'simple',symbol:{type:'simple-fill',
+    color:[26,135,175,0.13],outline:{color:[18,121,158,1],width:1.6}}};
+   const esCuenca=lyr=>lyr?.type==='feature'&&(
+      /^cuenca[_ ]n(?:c)?$/i.test((lyr.title||'').trim())||
+      /\/Cuenca_N(?:C)?\/FeatureServer/i.test(lyr.url||'')||
+      lyr.portalItem?.id===CUENCA_ITEM_ID);
+   const anteriores=wm.allLayers.toArray().filter(esCuenca);
+   const intentos=[];
+   // No eliminar ni ocultar una capa configurada en el WebMap. Antes se quitaba
+   // aun cuando Map Viewer podía dibujarla, generando un error innecesario.
+   async function examinar(lyr,origen){
     try{
-     candidata=new FeatureLayer({...opciones,...fuente});
-     wm.add(candidata);
-     await candidata.load();
-     const q=candidata.createQuery();q.where='1=1';q.returnGeometry=true;q.outFields=[candidata.objectIdField];q.num=1;
-     const prueba=await candidata.queryFeatures(q);
-     if(!prueba.features?.length || !prueba.features[0].geometry)throw Error('La consulta no devolvió polígonos con geometría.');
-     capa=candidata;break;
-    }catch(err){fallos.push((fuente.url?'Servicio directo':'Elemento de ArcGIS')+': '+(err.message||String(err)));if(candidata)wm.remove(candidata);}
+     await lyr.load();
+     const q=lyr.createQuery();q.where='1=1';q.outFields=[lyr.objectIdField||'*'];
+     q.returnGeometry=true;q.num=1;
+     const respuesta=await lyr.queryFeatures(q);
+     if(!respuesta?.features?.some(f=>f.geometry)){
+      throw Error('La consulta se completó pero no devolvió geometrías.');
+     }
+     lyr.visible=true;lyr.minScale=0;lyr.maxScale=0;
+     lyr.renderer=simbolo;
+     capa=lyr;
+     return true;
+    }catch(e){
+     intentos.push(origen+': '+(e?.message||String(e)));
+     console.warn('Cuenca_N - '+origen,e);
+     return false;
+    }
+   }
+   for(const ly of anteriores){if(await examinar(ly,'Capa incluida en el WebMap'))break;}
+   // Utilizar el servicio directo solo como respaldo y NO como sustituto obligatorio.
+   // Un itemId privado sin URL no puede instanciarse como FeatureLayer sin permiso;
+   // se elimina ese intento que producía "Feature layer must be created with either a url or a source".
+   if(!capa){
+    const url=(URL_CAPA_ACTUALIZADA.trim()||URL_CAPA_ORIGINAL).trim();
+    const duplicada=anteriores.some(ly=>String(ly.url||'').replace(/\/$/,'')===url.replace(/\/$/,''));
+    if(url&&!duplicada){
+     const nueva=new FeatureLayer({url,title:'Cuenca_N',visible:true,
+        renderer:simbolo,outFields:['*'],popupEnabled:true});
+     if(API_KEY&&!API_KEY.startsWith('PEGA_'))nueva.apiKey=API_KEY;
+     if(await examinar(nueva,'Servicio directo'))wm.add(nueva);
+     else if(typeof nueva.destroy==='function')nueva.destroy();
+    }else if(duplicada){
+     intentos.push('Servicio directo: coincide con la capa del WebMap ya consultada; no se duplicó.');
+    }
    }
    prepararCapas(wm.allLayers.toArray());
-   if(!capa)throw Error('Cuenca_N no entrega geometrías. '+fallos.join(' | '));
-   capa.visible=true;
+   // Mostrar el mapa y sus demás capas aunque falle el acceso específico a Cuenca_N.
+   if(!capa){
+    throw Error('No se pudo consultar la geometría de Cuenca_N con las credenciales del dashboard. '
+      +intentos.join(' | '));
+   }
    layerResaltado=new GraphicsLayer({title:'Cuenca seleccionada - contorno',listMode:'hide'});
    wm.add(layerResaltado);
    vista.ui.add(new ScaleBar({view:vista,unit:'metric'}),'bottom-left');
    vista.ui.add(new Legend({view:vista}),'bottom-right');
-   // La carga del FeatureLayer y el dibujo de sus entidades son procesos distintos.
-   try{await vista.whenLayerView(capa);}catch(e){console.warn('La vista de Cuenca_N todavía no dibuja:',e.message);}
+   try{await vista.whenLayerView(capa);}catch(e){console.warn('Dibujo de Cuenca_N:',e.message);}
    mapaListo=true;ultimoMapaError='';advertirCapa('');
    vista.on('click',async evento=>{
-    try{const hit=await vista.hitTest(evento,{include:[capa]});const obtenido=hit.results.find(r=>r.graphic&&r.graphic.layer===capa);if(!obtenido)return;
+    try{
+     const hit=await vista.hitTest(evento,{include:[capa]});
+     const obtenido=hit.results.find(r=>r.graphic&&r.graphic.layer===capa);
+     if(!obtenido)return;
      const g=obtenido.graphic;
-     const f=capa.fields.find(x=>x.name.toUpperCase()==='FID_R');let id=f?g.attributes[f.name]:null;
-     if((id===null||id===undefined)&&g.attributes[capa.objectIdField]!==undefined){const q=capa.createQuery();q.objectIds=[g.attributes[capa.objectIdField]];q.outFields=['FID_R'];q.returnGeometry=false;const found=await capa.queryFeatures(q);id=found.features[0]?.attributes?.FID_R;}
+     const f=capa.fields.find(x=>x.name.toUpperCase()==='FID_R');
+     let id=f?g.attributes[f.name]:null;
+     if((id===null||id===undefined)&&g.attributes[capa.objectIdField]!==undefined){
+      const q=capa.createQuery();q.objectIds=[g.attributes[capa.objectIdField]];
+      q.outFields=['FID_R'];q.returnGeometry=false;
+      const found=await capa.queryFeatures(q);
+      id=found.features[0]?.attributes?.FID_R;
+     }
      const a=porId.get(normalizarId(id));
      if(a)await seleccionar(a,true,g.geometry);
      else estadoMapa('El polígono no tiene coincidencia FID_R con el CSV actualizado.');
@@ -273,8 +311,9 @@ function iniciarMapa(){
   }catch(e){
    mapaListo=false;ultimoMapaError=e?.message||String(e);
    console.error('Error cartográfico Cuenca_N:',e);
-   estadoMapa('Mapa: '+ultimoMapaError+'. Los indicadores tabulares continúan disponibles.');
-   advertirCapa('Cuenca_N no pudo cargarse: '+ultimoMapaError+'. Revisa las consultas y la API Key en ArcGIS Online.');
+   if(wmActual)prepararCapas(wmActual.allLayers.toArray());
+   estadoMapa('Mapa: '+ultimoMapaError+' Los indicadores tabulares siguen disponibles.');
+   advertirCapa('Cuenca_N: '+ultimoMapaError);
   }
  });
 }
